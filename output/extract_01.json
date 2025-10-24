@@ -1,0 +1,436 @@
+{
+  "name": "I-129",
+  "description": "Petition for Nonimmigrant Worker - Beneficiary Information",
+  "sections": [
+    {
+      "name": "Beneficiary_Information",
+      "fields": [
+        {
+          "key": "Beneficiary.Name.Family",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's family name (last name)",
+          "pdfFieldName": "form1[0].#subform[1].Part3_Line2_FamilyName[0]"
+        },
+        {
+          "key": "Beneficiary.Name.Given",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's given name (first name)",
+          "pdfFieldName": "form1[0].#subform[1].Part3_Line2_GivenName[0]"
+        },
+        {
+          "key": "Beneficiary.Name.Middle",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's middle name",
+          "pdfFieldName": "form1[0].#subform[1].Part3_Line2_MiddleName[0]"
+        },
+        {
+          "key": "Beneficiary.Gender",
+          "type": "SELECT_ONE",
+          "options": [
+            "Male",
+            "Female"
+          ],
+          "description": "Beneficiary's gender",
+          "pdfFieldName": "form1[0].#subform[2].Line1_Gender_P3[0]"
+        },
+        {
+          "key": "Beneficiary.SSN",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's U.S. Social Security Number (if any)",
+          "pdfFieldName": "form1[0].#subform[2].Line5_SSN[0]"
+        },
+        {
+          "key": "Beneficiary.AlienNumber",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's Alien Registration Number (A-Number)",
+          "pdfFieldName": "form1[0].#subform[2].Line1_AlienNumber[0]"
+        },
+        {
+          "key": "Beneficiary.DateOfBirth",
+          "type": "DATE",
+          "options": null,
+          "description": "Beneficiary's date of birth (mm/dd/yyyy)",
+          "pdfFieldName": "form1[0].#subform[2].Line6_DateOfBirth[0]"
+        },
+        {
+          "key": "Beneficiary.CountryOfBirth",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's country of birth",
+          "pdfFieldName": "form1[0].#subform[2].Part3Line4_CountryOfBirth[0]"
+        },
+        {
+          "key": "Beneficiary.CountryOfCitizenship",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's country of citizenship or nationality",
+          "pdfFieldName": "form1[0].#subform[2].Part3Line4_CountryOfCitizenship[0]"
+        },
+        {
+          "key": "Beneficiary.OtherNames.FamilyName1",
+          "type": "TEXT",
+          "options": null,
+          "description": "Other family names used (nicknames, aliases, maiden name, etc.) - 1st",
+          "pdfFieldName": "form1[0].#subform[2].Line3_FamilyName1[0]"
+        },
+        {
+          "key": "Beneficiary.OtherNames.GivenName1",
+          "type": "TEXT",
+          "options": null,
+          "description": "Other given names used - 1st",
+          "pdfFieldName": "form1[0].#subform[2].Line3_GivenName1[0]"
+        },
+        {
+          "key": "Beneficiary.OtherNames.MiddleName1",
+          "type": "TEXT",
+          "options": null,
+          "description": "Other middle names used - 1st",
+          "pdfFieldName": "form1[0].#subform[2].Line3_MiddleName1[0]"
+        },
+        {
+          "key": "Beneficiary.OtherNames.FamilyName2",
+          "type": "TEXT",
+          "options": null,
+          "description": "Other family names used - 2nd",
+          "pdfFieldName": "form1[0].#subform[2].Line3_FamilyName2[0]"
+        },
+        {
+          "key": "Beneficiary.OtherNames.GivenName2",
+          "type": "TEXT",
+          "options": null,
+          "description": "Other given names used - 2nd",
+          "pdfFieldName": "form1[0].#subform[2].Line3_GivenName2[0]"
+        },
+        {
+          "key": "Beneficiary.OtherNames.MiddleName2",
+          "type": "TEXT",
+          "options": null,
+          "description": "Other middle names used - 2nd",
+          "pdfFieldName": "form1[0].#subform[2].Line3_MiddleName2[0]"
+        },
+        {
+          "key": "Beneficiary.OtherNames.FamilyName3",
+          "type": "TEXT",
+          "options": null,
+          "description": "Other family names used - 3rd",
+          "pdfFieldName": "form1[0].#subform[2].Line3_FamilyName3[0]"
+        },
+        {
+          "key": "Beneficiary.OtherNames.GivenName3",
+          "type": "TEXT",
+          "options": null,
+          "description": "Other given names used - 3rd",
+          "pdfFieldName": "form1[0].#subform[2].Line3_GivenName3[0]"
+        },
+        {
+          "key": "Beneficiary.OtherNames.MiddleName3",
+          "type": "TEXT",
+          "options": null,
+          "description": "Other middle names used - 3rd",
+          "pdfFieldName": "form1[0].#subform[2].Line3_MiddleName3[0]"
+        },
+        {
+          "key": "Beneficiary.USAddress.StreetNumber",
+          "type": "TEXT",
+          "options": null,
+          "description": "Current US residential address - Street number and name",
+          "pdfFieldName": "form1[0].#subform[2].Line8a_StreetNumberName[0]"
+        },
+        {
+          "key": "Beneficiary.USAddress.Unit",
+          "type": "SELECT_ONE",
+          "options": [
+            "Apt.",
+            "Ste.",
+            "Flr."
+          ],
+          "description": "Current US residential address - Unit type",
+          "pdfFieldName": "form1[0].#subform[2].Line6_Unit[0]"
+        },
+        {
+          "key": "Beneficiary.USAddress.UnitNumber",
+          "type": "TEXT",
+          "options": null,
+          "description": "Current US residential address - Unit number",
+          "pdfFieldName": "form1[0].#subform[2].Line6_AptSteFlrNumber[0]"
+        },
+        {
+          "key": "Beneficiary.USAddress.City",
+          "type": "TEXT",
+          "options": null,
+          "description": "Current US residential address - City or town",
+          "pdfFieldName": "form1[0].#subform[2].Line8d_CityTown[0]"
+        },
+        {
+          "key": "Beneficiary.USAddress.State",
+          "type": "SELECT_ONE",
+          "options": [
+            "AA",
+            "AE",
+            "AK",
+            "AL",
+            "AP",
+            "AR",
+            "AS",
+            "AZ",
+            "CA",
+            "CO",
+            "CT",
+            "DC",
+            "DE",
+            "FL",
+            "FM",
+            "GA",
+            "GU",
+            "HI",
+            "IA",
+            "ID",
+            "IL",
+            "IN",
+            "KS",
+            "KY",
+            "LA",
+            "MA",
+            "MD",
+            "ME",
+            "MH",
+            "MI",
+            "MN",
+            "MO",
+            "MP",
+            "MS",
+            "MT",
+            "NC",
+            "ND",
+            "NE",
+            "NH",
+            "NJ",
+            "NM",
+            "NV",
+            "NY",
+            "OH",
+            "OK",
+            "OR",
+            "PA",
+            "PR",
+            "PW",
+            "RI",
+            "SC",
+            "SD",
+            "TN",
+            "TX",
+            "UT",
+            "VA",
+            "VI",
+            "VT",
+            "WA",
+            "WI",
+            "WV",
+            "WY"
+          ],
+          "description": "Current US residential address - State",
+          "pdfFieldName": "form1[0].#subform[2].Line8e_State[0]"
+        },
+        {
+          "key": "Beneficiary.USAddress.ZipCode",
+          "type": "TEXT",
+          "options": null,
+          "description": "Current US residential address - ZIP code",
+          "pdfFieldName": "form1[0].#subform[2].Line8f_ZipCode[0]"
+        },
+        {
+          "key": "Beneficiary.Arrival.DateOfLastArrival",
+          "type": "DATE",
+          "options": null,
+          "description": "Date of last arrival in the United States (mm/dd/yyyy)",
+          "pdfFieldName": "form1[0].#subform[2].Part3Line5_DateofArrival[0]"
+        },
+        {
+          "key": "Beneficiary.Arrival.I94Number",
+          "type": "TEXT",
+          "options": null,
+          "description": "I-94 Arrival-Departure Record Number",
+          "pdfFieldName": "form1[0].#subform[2].Part3Line5_ArrivalDeparture[0]"
+        },
+        {
+          "key": "Beneficiary.Passport.Number",
+          "type": "TEXT",
+          "options": null,
+          "description": "Passport or travel document number",
+          "pdfFieldName": "form1[0].#subform[2].Part3Line5_PassportorTravDoc[0]"
+        },
+        {
+          "key": "Beneficiary.Passport.DateIssued",
+          "type": "DATE",
+          "options": null,
+          "description": "Date passport or travel document was issued (mm/dd/yyyy)",
+          "pdfFieldName": "form1[0].#subform[2].Line11e_ExpDate[0]"
+        },
+        {
+          "key": "Beneficiary.Passport.DateExpires",
+          "type": "DATE",
+          "options": null,
+          "description": "Date passport or travel document expires (mm/dd/yyyy)",
+          "pdfFieldName": "form1[0].#subform[2].Line11e_ExpDate[1]"
+        },
+        {
+          "key": "Beneficiary.Passport.CountryOfIssuance",
+          "type": "TEXT",
+          "options": null,
+          "description": "Passport or travel document country of issuance",
+          "pdfFieldName": "form1[0].#subform[2].Line_CountryOfIssuance[0]"
+        },
+        {
+          "key": "Beneficiary.CurrentStatus.NonimmigrantStatus",
+          "type": "SELECT_ONE",
+          "options": [
+            "H1B",
+            "L1",
+            "F1",
+            "J1",
+            "B1",
+            "B2",
+            "E1",
+            "E2",
+            "O1",
+            "P1",
+            "R1"
+          ],
+          "description": "Current nonimmigrant status (select from dropdown)",
+          "pdfFieldName": "form1[0].#subform[2].Line11g_CurrentNon[0]"
+        },
+        {
+          "key": "Beneficiary.CurrentStatus.ExpirationDate",
+          "type": "DATE",
+          "options": null,
+          "description": "Date current status expires (mm/dd/yyyy) or D/S",
+          "pdfFieldName": "form1[0].#subform[2].Line11h_DateStatusExpires[0]"
+        },
+        {
+          "key": "Beneficiary.SEVIS.Number",
+          "type": "TEXT",
+          "options": null,
+          "description": "Student and Exchange Visitor Information System (SEVIS) Number (if any)",
+          "pdfFieldName": "form1[0].#subform[2].Line5_SEVIS[0]"
+        },
+        {
+          "key": "Beneficiary.EAD.Number",
+          "type": "TEXT",
+          "options": null,
+          "description": "Employment Authorization Document (EAD) Number (if any)",
+          "pdfFieldName": "form1[0].#subform[2].Line5_EAD[0]"
+        },
+        {
+          "key": "Beneficiary.ForeignAddress.StreetName",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's foreign address - Street number and name",
+          "pdfFieldName": "form1[0].#subform[25].Part3Line2_StreetName[0]"
+        },
+        {
+          "key": "Beneficiary.ForeignAddress.City",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's foreign address - City or town",
+          "pdfFieldName": "form1[0].#subform[25].Part3Line2_City[0]"
+        },
+        {
+          "key": "Beneficiary.ForeignAddress.State",
+          "type": "SELECT_ONE",
+          "options": [
+            "AA",
+            "AE",
+            "AK",
+            "AL",
+            "AP",
+            "AR",
+            "AS",
+            "AZ",
+            "CA",
+            "CO",
+            "CT",
+            "DC",
+            "DE",
+            "FL",
+            "FM",
+            "GA",
+            "GU",
+            "HI",
+            "IA",
+            "ID",
+            "IL",
+            "IN",
+            "KS",
+            "KY",
+            "LA",
+            "MA",
+            "MD",
+            "ME",
+            "MH",
+            "MI",
+            "MN",
+            "MO",
+            "MP",
+            "MS",
+            "MT",
+            "NC",
+            "ND",
+            "NE",
+            "NH",
+            "NJ",
+            "NM",
+            "NV",
+            "NY",
+            "OH",
+            "OK",
+            "OR",
+            "PA",
+            "PR",
+            "PW",
+            "RI",
+            "SC",
+            "SD",
+            "TN",
+            "TX",
+            "UT",
+            "VA",
+            "VI",
+            "VT",
+            "WA",
+            "WI",
+            "WV",
+            "WY"
+          ],
+          "description": "Beneficiary's foreign address - State (if applicable)",
+          "pdfFieldName": "form1[0].#subform[25].Part3Line2_State[0]"
+        },
+        {
+          "key": "Beneficiary.ForeignAddress.Province",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's foreign address - Province",
+          "pdfFieldName": "form1[0].#subform[25].Part3Line2_Province[0]"
+        },
+        {
+          "key": "Beneficiary.ForeignAddress.PostalCode",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's foreign address - Postal code",
+          "pdfFieldName": "form1[0].#subform[25].Part3Line2_PostalCode[0]"
+        },
+        {
+          "key": "Beneficiary.ForeignAddress.Country",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's foreign address - Country",
+          "pdfFieldName": "form1[0].#subform[25].Part3Line2_Country[0]"
+        }
+      ]
+    }
+  ]
+}
