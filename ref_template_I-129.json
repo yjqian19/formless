@@ -1,0 +1,91 @@
+{
+  "name": "I-129",
+  "description": "Petition for Nonimmigrant Worker (USCIS Form I-129). Sample template with representative field types.",
+  "sections": [
+    {
+      "name": "Beneficiary_Information",
+      "fields": [
+        {
+          "key": "Beneficiary.Gender",
+          "type": "SELECT_ONE",
+          "options": ["Male", "Female"],
+          "description": "Beneficiary's gender",
+          "pdfFieldName": "Pt2Line3_Gender"
+        },
+        {
+          "key": "Beneficiary.SSN",
+          "type": "TEXT",
+          "options": null,
+          "description": "Beneficiary's Social Security Number",
+          "pdfFieldName": "Pt2Line4_SSN"
+        },
+        {
+          "key": "Beneficiary.USAddress.State",
+          "type": "SELECT_ONE",
+          "options": ["CA", "NY", "TX", "FL", "WA"],
+          "description": "US mailing address - State",
+          "pdfFieldName": "Pt2Line5c_State"
+        },
+        {
+          "key": "Beneficiary.Dependents.HasDependents",
+          "type": "BOOLEAN",
+          "options": [true, false],
+          "description": "Does beneficiary have dependents?",
+          "pdfFieldName": "Pt2Line15_HasDependents"
+        },
+        {
+          "key": "Beneficiary.Dependents.Count",
+          "type": "NUMBER",
+          "options": null,
+          "description": "Number of dependents",
+          "pdfFieldName": "Pt2Line15a_DependentCount"
+        }
+      ]
+    },
+    {
+      "name": "Employer_Information",
+      "fields": [
+        {
+          "key": "Employer.Contact.Email",
+          "type": "TEXT",
+          "options": null,
+          "description": "Employer email address",
+          "pdfFieldName": "Pt1Line6_Email"
+        },
+        {
+          "key": "Employer.Contact.DaytimePhone",
+          "type": "TEXT",
+          "options": null,
+          "description": "Employer daytime phone number",
+          "pdfFieldName": "Pt1Line4_DaytimePhone"
+        },
+        {
+          "key": "Employer.EmployeeCount.TotalUS",
+          "type": "NUMBER",
+          "options": null,
+          "description": "Total number of employees in the US",
+          "pdfFieldName": "Pt5Line6a_TotalUSEmployees"
+        }
+      ]
+    },
+    {
+      "name": "Job_Information",
+      "fields": [
+        {
+          "key": "Job.Location.City",
+          "type": "TEXT",
+          "options": null,
+          "description": "Job location - City",
+          "pdfFieldName": "Pt5Line1b_JobCity"
+        },
+        {
+          "key": "Job.OffsiteWork",
+          "type": "BOOLEAN",
+          "options": [true, false],
+          "description": "Will work be performed at an off-site location?",
+          "pdfFieldName": "Pt5Line2_OffsiteWork"
+        }
+      ]
+    }
+  ]
+}
