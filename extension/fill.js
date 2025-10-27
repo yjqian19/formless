@@ -44,11 +44,8 @@ async function handleAutofill(message, sendResponse) {
     return;
   }
 
-  // Get selected memories from memoryHub based on memory names
-  const selectedMemories = getSelectedMemories(memoryNames);
-
-  // Compose result from selected memories (async with 5 second delay)
-  const result = await composeResult(parsedFields, selectedMemories);
+  // Compose result from parsedFields and memoryNames (async with 5 second delay)
+  const result = await composeResult(parsedFields, memoryNames);
 
   // Fill form with composed result
   fillFormWithComposedResult(result);
@@ -60,21 +57,15 @@ async function handleAutofill(message, sendResponse) {
   sendResponse({ success: true });
 }
 
-function getSelectedMemories(memoryNames) {
-  // Extract memories from memoryHub based on memory names
-  // Return object: { 'basic_info': [...], 'why_join': [...] }
+async function composeResult(parsedFields, memoryNames) {
+  // Extract selected memories from memoryHub based on memory names
   const selectedMemories = {};
-
   memoryNames.forEach(memoryName => {
     if (memoryHub[memoryName]) {
       selectedMemories[memoryName] = memoryHub[memoryName];
     }
   });
 
-  return selectedMemories;
-}
-
-async function composeResult(parsedFields, selectedMemories) {
   // Simulate 5 second processing time (like calling backend API)
   console.log('Composing result with:', { parsedFields, selectedMemories });
 
@@ -82,7 +73,7 @@ async function composeResult(parsedFields, selectedMemories) {
 
   // Transform memory items into a composed result object
   // For now, return the fake composedResult after waiting
-  // In the future, this would process selectedMemories to generate the result
+  // In the future, this would process parsedFields and selectedMemories to generate the result
   console.log('Composition complete!');
   return fakeComposedResult;
 }
