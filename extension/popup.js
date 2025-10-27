@@ -1,41 +1,41 @@
-// Store selected contexts
-let selectedContexts = ['basic_info', 'work_reason_prompt'];
+// Store selected memory names
+let selectedMemoryNames = ['basic_info', 'why_join'];
 
 // Handle checkbox changes
-document.querySelectorAll('#contextSelection input[type="checkbox"]').forEach(checkbox => {
-  checkbox.addEventListener('change', updateSelectedContexts);
+document.querySelectorAll('#memorySelection input[type="checkbox"]').forEach(checkbox => {
+  checkbox.addEventListener('change', updateSelectedMemoryNames);
 });
 
-function updateSelectedContexts() {
-  selectedContexts = [];
-  document.querySelectorAll('#contextSelection input[type="checkbox"]:checked').forEach(checkbox => {
-    selectedContexts.push(checkbox.value);
+function updateSelectedMemoryNames() {
+  selectedMemoryNames = [];
+  document.querySelectorAll('#memorySelection input[type="checkbox"]:checked').forEach(checkbox => {
+    selectedMemoryNames.push(checkbox.value);
   });
 
   // Update display
-  const display = document.getElementById('selectedContexts');
+  const display = document.getElementById('selectedMemories');
   const autoFillBtn = document.getElementById('autoFill');
 
-  if (selectedContexts.length === 0) {
-    display.textContent = 'No context selected';
+  if (selectedMemoryNames.length === 0) {
+    display.textContent = 'No memory selected';
     display.classList.add('empty');
     autoFillBtn.disabled = true;
   } else {
-    display.textContent = `Selected: ${selectedContexts.join(', ')}`;
+    display.textContent = `Selected: ${selectedMemoryNames.join(', ')}`;
     display.classList.remove('empty');
     autoFillBtn.disabled = false;
   }
 }
 
-// Auto fill with selected contexts
+// Auto fill with selected memory names
 document.getElementById('autoFill').addEventListener('click', async () => {
-  if (selectedContexts.length === 0) {
+  if (selectedMemoryNames.length === 0) {
     return;
   }
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   chrome.tabs.sendMessage(tab.id, {
     action: 'autofill',
-    contexts: selectedContexts
+    memoryNames: selectedMemoryNames
   });
 });
