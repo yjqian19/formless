@@ -33,9 +33,23 @@ document.getElementById('autoFill').addEventListener('click', async () => {
     return;
   }
 
+  const autoFillBtn = document.getElementById('autoFill');
+
+  // Set loading state
+  autoFillBtn.disabled = true;
+  autoFillBtn.classList.add('loading');
+  autoFillBtn.textContent = '';
+
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  // Send message and wait for response
   chrome.tabs.sendMessage(tab.id, {
     action: 'autofill',
     memoryNames: selectedMemoryNames
+  }, () => {
+    // Reset button state after completion
+    autoFillBtn.disabled = false;
+    autoFillBtn.classList.remove('loading');
+    autoFillBtn.textContent = 'Auto Fill';
   });
 });

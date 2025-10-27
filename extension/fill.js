@@ -29,28 +29,36 @@ const fakeComposedResult = {
   why_join: "I'm excited to apply my skills in building intelligent, user-centered applications that create real impact."
 };
 
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'autofill') {
-    const memoryNames = message.memoryNames || [];
-
-    if (memoryNames.length === 0) {
-      alert('No memory selected!');
-      return;
-    }
-
-    // Get selected memories from memoryHub based on memory names
-    const selectedMemories = getSelectedMemories(memoryNames);
-
-    // Compose result from selected memories
-    const result = composeResult(parsedFields, selectedMemories);
-
-    // Fill form with composed result
-    fillFormWithComposedResult(result);
-
-    // Show floating notification
-    showNotification(memoryNames);
+    handleAutofill(message, sendResponse);
+    return true; // Keep message channel open for async response
   }
 });
+
+async function handleAutofill(message, sendResponse) {
+  const memoryNames = message.memoryNames || [];
+
+  if (memoryNames.length === 0) {
+    sendResponse({ success: false });
+    return;
+  }
+
+  // Get selected memories from memoryHub based on memory names
+  const selectedMemories = getSelectedMemories(memoryNames);
+
+  // Compose result from selected memories (async with 5 second delay)
+  const result = await composeResult(parsedFields, selectedMemories);
+
+  // Fill form with composed result
+  fillFormWithComposedResult(result);
+
+  // Show floating notification
+  showNotification(memoryNames);
+
+  // Send response back to popup
+  sendResponse({ success: true });
+}
 
 function getSelectedMemories(memoryNames) {
   // Extract memories from memoryHub based on memory names
@@ -66,10 +74,16 @@ function getSelectedMemories(memoryNames) {
   return selectedMemories;
 }
 
-function composeResult(parsedFields, selectedMemories) {
+async function composeResult(parsedFields, selectedMemories) {
+  // Simulate 5 second processing time (like calling backend API)
+  console.log('Composing result with:', { parsedFields, selectedMemories });
+
+  await new Promise(resolve => setTimeout(resolve, 5000));
+
   // Transform memory items into a composed result object
-  // For now, directly return the fake composedResult
+  // For now, return the fake composedResult after waiting
   // In the future, this would process selectedMemories to generate the result
+  console.log('Composition complete!');
   return fakeComposedResult;
 }
 
@@ -96,16 +110,16 @@ function showNotification(memories) {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background: #1a1a1a;
-      color: white;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-family: system-ui, -apple-system, sans-serif;
-      font-size: 13px;
+      background: #000;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 11px;
       z-index: 10000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border: 1px solid #333;
     `;
     document.body.appendChild(notification);
   }
-  notification.textContent = `✅ Formless: Filled with [${memories.join(', ')}]`;
+  notification.textContent = `Filled: ${memories.join(', ')}`;
 }
