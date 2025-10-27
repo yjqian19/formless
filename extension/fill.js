@@ -26,7 +26,7 @@ const parsedFields = ['full_name', 'email', 'why_join'];
 const fakeComposedResult = {
   full_name: 'Yujia Qian',
   email: 'yujia@example.com',
-  why_join: "I'm excited to apply my skills in building intelligent, user-centered applications that create real impact."
+  why_join: "I'm excited to join a team that deeply values user impact. I'm motivated by the idea of building products that genuinely improve people's lives, and I hope to contribute to meaningful, user-centered outcomes through thoughtful design and execution."
 };
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

@@ -27,6 +27,12 @@ function updateSelectedMemoryNames() {
   }
 }
 
+// Open Memory Hub page
+document.getElementById('manageMemories').addEventListener('click', () => {
+  const memoryHubPath = 'file:///Volumes/yjbolt/projects/formless/memory-hub.html';
+  chrome.tabs.create({ url: memoryHubPath });
+});
+
 // Auto fill with selected memory names
 document.getElementById('autoFill').addEventListener('click', async () => {
   if (selectedMemoryNames.length === 0) {
