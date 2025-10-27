@@ -1,21 +1,35 @@
+// Context data
+const contextData = {
+  basic_info: {
+    full_name: 'Yujia Qian',
+    email: 'yujia@example.com'
+  },
+  work_reason_prompt: {
+    why_join: "I'm excited to apply my skills in building intelligent, user-centered applications that create real impact."
+  }
+};
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'autofill') {
-    // Fill text inputs
-    document.getElementById('full_name').value = 'Yujia Qian';
-    document.getElementById('email').value = 'yujia@example.com';
-    document.getElementById('position').value = 'Full-Stack Developer';
-    document.getElementById('why_join').value = "I'm excited to apply my skills in building intelligent, user-centered applications that create real impact.";
+    const contexts = message.contexts || [];
 
-    // Select radio button
-    const hybridRadio = document.querySelector('input[name="work_type"][value="Hybrid"]');
-    if (hybridRadio) hybridRadio.checked = true;
+    if (contexts.length === 0) {
+      alert('No context selected!');
+      return;
+    }
 
-    // Check checkboxes
-    const pythonCheckbox = document.querySelector('input[type="checkbox"][value="Python"]');
-    if (pythonCheckbox) pythonCheckbox.checked = true;
-
-    const uiuxCheckbox = document.querySelector('input[type="checkbox"][value="UI/UX"]');
-    if (uiuxCheckbox) uiuxCheckbox.checked = true;
+    // Fill fields based on selected contexts
+    contexts.forEach(contextName => {
+      const data = contextData[contextName];
+      if (data) {
+        Object.keys(data).forEach(fieldId => {
+          const field = document.getElementById(fieldId);
+          if (field) {
+            field.value = data[fieldId];
+          }
+        });
+      }
+    });
 
     // Show floating notification
     let notification = document.getElementById('formless-notification');
@@ -37,7 +51,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       `;
       document.body.appendChild(notification);
     }
-    notification.textContent = '✅ Formless: Filled with AI reasoning';
+    notification.textContent = `✅ Formless: Filled with [${contexts.join(', ')}]`;
 
     // Show alert
     alert('Form completed!');

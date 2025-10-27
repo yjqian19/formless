@@ -69,32 +69,6 @@
       resize: vertical;
     }
 
-    .radio-group,
-    .checkbox-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .radio-option,
-    .checkbox-option {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    input[type="radio"],
-    input[type="checkbox"] {
-      cursor: pointer;
-    }
-
-    .radio-option label,
-    .checkbox-option label {
-      margin: 0;
-      cursor: pointer;
-      font-weight: 400;
-    }
-
     button {
       width: 100%;
       padding: 12px;
@@ -129,53 +103,8 @@
       </div>
 
       <div class="form-group">
-        <label for="position">Position You Are Applying For</label>
-        <input type="text" id="position" name="position">
-      </div>
-
-      <div class="form-group">
         <label for="why_join">Why do you want to work here?</label>
         <textarea id="why_join" name="why_join"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Preferred Work Type</label>
-        <div class="radio-group">
-          <div class="radio-option">
-            <input type="radio" id="remote" name="work_type" value="Remote">
-            <label for="remote">Remote</label>
-          </div>
-          <div class="radio-option">
-            <input type="radio" id="onsite" name="work_type" value="On-site">
-            <label for="onsite">On-site</label>
-          </div>
-          <div class="radio-option">
-            <input type="radio" id="hybrid" name="work_type" value="Hybrid">
-            <label for="hybrid">Hybrid</label>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Skills (choose all that apply)</label>
-        <div class="checkbox-group">
-          <div class="checkbox-option">
-            <input type="checkbox" id="python" name="skills" value="Python">
-            <label for="python">Python</label>
-          </div>
-          <div class="checkbox-option">
-            <input type="checkbox" id="javascript" name="skills" value="JavaScript">
-            <label for="javascript">JavaScript</label>
-          </div>
-          <div class="checkbox-option">
-            <input type="checkbox" id="uiux" name="skills" value="UI/UX">
-            <label for="uiux">UI/UX</label>
-          </div>
-          <div class="checkbox-option">
-            <input type="checkbox" id="ml" name="skills" value="Machine Learning">
-            <label for="ml">Machine Learning</label>
-          </div>
-        </div>
       </div>
 
       <button type="submit">Submit Application</button>

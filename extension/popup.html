@@ -48,19 +48,81 @@
       background: #333;
     }
 
-    #status {
-      margin-top: 16px;
+    button#autoFill:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    #contextSelection {
+      margin-bottom: 15px;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .context-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .context-option:last-child {
+      margin-bottom: 0;
+    }
+
+    .context-option input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    .context-option label {
+      cursor: pointer;
+      font-size: 13px;
+      color: #333;
+    }
+
+    #selectedContexts {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 4px;
       font-size: 12px;
+      color: #666;
+    }
+
+    #selectedContexts.empty {
       color: #999;
     }
   </style>
 </head>
 <body>
   <h1>Formless</h1>
-  <button id="selectField">Select Field</button>
-  <button id="selectContext">Select Context</button>
+
+  <div class="section-title">Context:</div>
+
+  <div id="contextSelection">
+    <div class="context-option">
+      <input type="checkbox" id="basic_info" value="basic_info" checked>
+      <label for="basic_info">basic_info</label>
+    </div>
+    <div class="context-option">
+      <input type="checkbox" id="work_reason_prompt" value="work_reason_prompt" checked>
+      <label for="work_reason_prompt">work_reason_prompt</label>
+    </div>
+  </div>
+
+  <div id="selectedContexts">Selected: basic_info, work_reason_prompt</div>
+
   <button id="autoFill">Auto Fill</button>
-  <div id="status"></div>
+
   <script src="popup.js"></script>
 </body>
 </html>
