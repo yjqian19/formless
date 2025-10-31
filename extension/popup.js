@@ -7,14 +7,14 @@ let fieldMode = 'all'; // 'all' or 'custom'
 // Predefined field IDs for 'all' mode
 const ALL_FIELDS = ['full_name', 'email', 'why_join'];
 
-// Handle checkbox changes
-document.querySelectorAll('#memorySelection input[type="checkbox"]').forEach(checkbox => {
+// Handle checkbox changes from Hub
+document.querySelectorAll('#memoryFromHub input[type="checkbox"]').forEach(checkbox => {
   checkbox.addEventListener('change', updateSelectedMemoryNames);
 });
 
 function updateSelectedMemoryNames() {
   selectedMemoryNames = [];
-  document.querySelectorAll('#memorySelection input[type="checkbox"]:checked').forEach(checkbox => {
+  document.querySelectorAll('#memoryFromHub input[type="checkbox"]:checked').forEach(checkbox => {
     selectedMemoryNames.push(checkbox.value);
   });
 
@@ -163,6 +163,45 @@ function updateAutoFillButtonState() {
   }
 }
 
+// Auto fill with selected memory names and field IDs
+document.getElementById('autoFill').addEventListener('click', async () => {
+  const autoFillBtn = document.getElementById('autoFill');
+
+  // Determine which fields to fill based on mode
+  let fieldIdsToFill = [];
+  if (fieldMode === 'all') {
+    fieldIdsToFill = ALL_FIELDS;
+  } else {
+    if (selectedFieldIds.length === 0) {
+      return;
+    }
+    fieldIdsToFill = selectedFieldIds;
+  }
+
+  if (selectedMemoryNames.length === 0) {
+    return;
+  }
+
+  // Set loading state
+  autoFillBtn.disabled = true;
+  autoFillBtn.classList.add('loading');
+  autoFillBtn.textContent = '';
+
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  // Send message and wait for response
+  chrome.tabs.sendMessage(tab.id, {
+    action: 'autofill',
+    memoryNames: selectedMemoryNames,
+    fieldIds: fieldIdsToFill
+  }, () => {
+    // Reset button state after completion
+    autoFillBtn.disabled = false;
+    autoFillBtn.classList.remove('loading');
+    autoFillBtn.textContent = 'Auto Fill';
+  });
+});
+
 // Listen for field selection from content script (for real-time updates when popup is open)
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('Popup received message:', message);
@@ -205,44 +244,7 @@ document.getElementById('manageMemories').addEventListener('click', () => {
   chrome.tabs.create({ url: memoryHubPath });
 });
 
-// Auto fill with selected memory names and field IDs
-document.getElementById('autoFill').addEventListener('click', async () => {
-  const autoFillBtn = document.getElementById('autoFill');
-
-  // Determine which fields to fill based on mode
-  let fieldIdsToFill = [];
-  if (fieldMode === 'all') {
-    fieldIdsToFill = ALL_FIELDS;
-  } else {
-    if (selectedFieldIds.length === 0) {
-      return;
-    }
-    fieldIdsToFill = selectedFieldIds;
-  }
-
-  if (selectedMemoryNames.length === 0) {
-    return;
-  }
-
-  // Set loading state
-  autoFillBtn.disabled = true;
-  autoFillBtn.classList.add('loading');
-  autoFillBtn.textContent = '';
-
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-  // Send message and wait for response
-  chrome.tabs.sendMessage(tab.id, {
-    action: 'autofill',
-    memoryNames: selectedMemoryNames,
-    fieldIds: fieldIdsToFill
-  }, () => {
-    // Reset button state after completion
-    autoFillBtn.disabled = false;
-    autoFillBtn.classList.remove('loading');
-    autoFillBtn.textContent = 'Auto Fill';
-  });
-});
-
 // Initialize on popup open
 loadSelectedFieldsFromStorage();
+updateSelectedMemoryNames(); // Initialize memory names from checkboxes
+updateAutoFillButtonState();

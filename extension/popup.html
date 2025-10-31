@@ -81,10 +81,10 @@
     }
 
     .section-title {
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 600;
       color: #333;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -109,12 +109,27 @@
       border-color: #999;
     }
 
-    #memorySelection {
-      margin-bottom: 25px;
+    .memory-subsection-title {
+      font-size: 12px;
+      font-weight: 400;
+      color: #666;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .memory-box {
+      margin-bottom: 15px;
       padding: 12px;
       background: #fff;
       border: 1px solid #ddd;
       border-radius: 4px;
+    }
+
+    .memory-box:last-child {
+      margin-bottom: 25px;
     }
 
     .memory-option {
@@ -136,6 +151,24 @@
       cursor: pointer;
       font-size: 13px;
       color: #333;
+    }
+
+    .memory-input-field {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 60px;
+      box-sizing: border-box;
+      margin-bottom: 25px;
+    }
+
+    .memory-input-field:focus {
+      outline: none;
+      border-color: #999;
     }
 
     #fieldSelection {
@@ -265,10 +298,14 @@
 
   <div class="section-title">
     <span>Memory:</span>
+  </div>
+
+  <div class="memory-subsection-title" style="margin-top: 0;">
+    <span>From Hub:</span>
     <span id="manageMemories" class="edit-icon">✎</span>
   </div>
 
-  <div id="memorySelection">
+  <div class="memory-box" id="memoryFromHub">
     <div class="memory-option">
       <input type="checkbox" id="basic_info" value="basic_info" checked>
       <label for="basic_info">basic_info</label>
@@ -278,6 +315,12 @@
       <label for="why_join">why_join</label>
     </div>
   </div>
+
+  <div class="memory-subsection-title">
+    <span>From Page:</span>
+  </div>
+
+  <textarea id="memoryFromPage" class="memory-input-field" placeholder="Paste content here..."></textarea>
 
   <button id="autoFill">Auto Fill</button>
 
