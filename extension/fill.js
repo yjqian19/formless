@@ -37,9 +37,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function handleAutofill(message, sendResponse) {
+  // Popup always sends both memoryNames and fieldIds
   const memoryNames = message.memoryNames || [];
+  const fieldIds = message.fieldIds || [];
 
-  if (memoryNames.length === 0) {
+  if (memoryNames.length === 0 || fieldIds.length === 0) {
     sendResponse({ success: false });
     return;
   }
@@ -47,11 +49,11 @@ async function handleAutofill(message, sendResponse) {
   // Compose result from parsedFields and memoryNames (async with 5 second delay)
   const result = await composeResult(parsedFields, memoryNames);
 
-  // Fill form with composed result
-  fillFormWithComposedResult(result);
+  // Fill form with composed result, only for selected fields
+  fillFormWithComposedResult(result, fieldIds);
 
   // Show floating notification
-  showNotification(memoryNames);
+  showNotification(memoryNames, fieldIds);
 
   // Send response back to popup
   sendResponse({ success: true });
@@ -78,21 +80,22 @@ async function composeResult(parsedFields, memoryNames) {
   return fakeComposedResult;
 }
 
-function fillFormWithComposedResult(composedResult) {
-  // Fill the form with the composed result
-
-  Object.keys(composedResult).forEach(fieldId => {
+function fillFormWithComposedResult(composedResult, fieldIds) {
+  // Fill the form with the composed result, only for selected fields
+  // fieldIds is always provided from popup
+  fieldIds.forEach(fieldId => {
     const field = document.getElementById(fieldId);
-
-    if (field) {
+    if (field && composedResult[fieldId] !== undefined) {
       field.value = composedResult[fieldId];
+    } else if (field) {
+      console.warn(`No value found for field ${fieldId}`);
     } else {
       console.warn(`Field ${fieldId} not found in DOM`);
     }
   });
 }
 
-function showNotification(memories) {
+function showNotification(memories, fieldIds) {
   let notification = document.getElementById('formless-notification');
   if (!notification) {
     notification = document.createElement('div');
@@ -112,5 +115,7 @@ function showNotification(memories) {
     `;
     document.body.appendChild(notification);
   }
-  notification.textContent = `Filled: ${memories.join(', ')}`;
+  const memoryText = memories.join(', ');
+  const fieldText = ` (Fields: ${fieldIds.join(', ')})`;
+  notification.textContent = `Filled: ${memoryText}${fieldText}`;
 }
