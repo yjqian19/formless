@@ -27,8 +27,11 @@ async def match_form_fields(request: MatchingRequest):
        - If type is "text": return value directly
        - If type is "prompt": generate content from prompt
     """
-    # Get memory items by their intents
-    memory_items = storage.get_items_by_intents(request.memory_intents)
+    # Get memory items by their intents (None means all items)
+    if not request.memory_intents:
+        memory_items = storage.get_all_items()
+    else:
+        memory_items = storage.get_items_by_intents(request.memory_intents)
 
     if not memory_items:
         raise HTTPException(
@@ -75,12 +78,27 @@ async def match_with_openai(
         for item in memory_items
     ]
 
+    # Get available intents for schema validation
+    available_intents = [item.intent for item in memory_items]
+
+    # Define JSON Schema for response format
+    # Response should be an object mapping field names (strings) to intent names (strings)
+    response_schema = {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": {
+            "type": "string",
+            "enum": available_intents
+        },
+        "required": []
+    }
+
     # Create prompt for semantic matching
     system_prompt = """You are a form field matching assistant. Your task is to semantically match form field names with memory item intents.
 
 Given a list of form field names and available memory items (each with an intent, value, and type), determine which intent best matches each field name through semantic understanding. The intent and field name might be expressed differently but have similar meaning.
 
-Return a JSON object mapping field names to intent names. If a field doesn't match any intent, omit it from the result.
+Return a JSON object mapping field names to intent names. If a field doesn't match any intent, omit it from the result. Each intent value must be one of the available intents.
 
 Example:
 Form fields: ["full_name", "email_address", "phone"]
@@ -97,7 +115,9 @@ Result: {"full_name": "legal_name", "email_address": "contact_email", "phone": "
 Available memory items:
 {json.dumps(items_info, indent=2)}
 
-Return a JSON object mapping each form field to its best matching intent. Use exact intent names from the available items. Perform semantic matching - the field name and intent might be worded differently but should have the same meaning."""
+Available intents: {available_intents}
+
+Return a JSON object mapping each form field to its best matching intent. Use exact intent names from the available intents list. Perform semantic matching - the field name and intent might be worded differently but should have the same meaning."""
 
     try:
         response = client.chat.completions.create(
@@ -106,7 +126,15 @@ Return a JSON object mapping each form field to its best matching intent. Use ex
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            response_format={"type": "json_object"},
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "field_intent_mapping",
+                    "strict": True,
+                    "schema": response_schema,
+                    "description": "Maps form field names to memory item intents"
+                }
+            },
             temperature=0.1
         )
 

@@ -14,7 +14,7 @@ class MemoryItemWithId(MemoryItem):
 
 class MatchingRequest(BaseModel):
     parsed_fields: list[str]
-    memory_intents: list[str]  # List of intent names to match
+    memory_intents: list[str] | None = None  # List of intent names to match, None means all
 
 
 class MatchingResponse(BaseModel):
