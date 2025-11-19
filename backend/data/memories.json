@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "intent": "legal_name",
+      "value": "Yujia Qian",
+      "type": "text"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "intent": "contact_email",
+      "value": "yujia@example.com",
+      "type": "text"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "intent": "why_join_company",
+      "value": "Write why I want to work at this company using the themes: user impact, fast iteration, ownership.",
+      "type": "prompt"
+    }
+  ]
+}

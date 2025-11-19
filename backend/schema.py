@@ -1,0 +1,21 @@
+from pydantic import BaseModel
+from typing import Literal
+
+
+class MemoryItem(BaseModel):
+    intent: str
+    value: str
+    type: Literal["text", "prompt"]
+
+
+class MemoryItemWithId(MemoryItem):
+    id: str
+
+
+class MatchingRequest(BaseModel):
+    parsed_fields: list[str]
+    memory_intents: list[str]  # List of intent names to match
+
+
+class MatchingResponse(BaseModel):
+    matched_fields: dict[str, str]  # field_name -> value
