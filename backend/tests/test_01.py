@@ -144,11 +144,55 @@ We're currently hiring and looking for talented engineers who are passionate abo
         print(f"❌ Error: {e}")
 
 
+async def test_04_no_match_no_user_prompt():
+    """
+    Test Case 4: No Match and No User Prompt
+    This tests the scenario where:
+    - There's a form field with no matching intent in memory hub
+    - No user_prompt is provided
+    - Expected: Should return empty string (none case)
+    """
+    print("\n" + "=" * 60)
+    print("Test 4: No Match and No User Prompt")
+    print("=" * 60)
+
+    # A field that doesn't match any existing memory items
+    # Existing items: "linkedin profile", "proudest project experience", "why join company"
+    field_name = "What's your favorite color?"
+
+    request = MatchingRequest(
+        parsed_field=field_name,
+        memory_intents=None,  # Use all memory items
+        user_prompt=None,  # No user prompt
+        context=None  # No context
+    )
+
+    print(f"\nTesting field: '{field_name}'")
+    print("Expected: No match found, should return empty string")
+    print("-" * 40)
+
+    try:
+        response = await match_form_fields(request)
+        print("✅ Success!")
+        for field, value in response.matched_fields.items():
+            print(f"  Field: {field}")
+            print(f"  Value: '{value}'")
+            print(f"  Value length: {len(value)}")
+            # Verify that value is empty string (none case)
+            if value == "":
+                print("  ✅ Correctly returned empty string (none case)")
+            else:
+                print(f"  ⚠️  Expected empty string, got: '{value}'")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+
+
 async def run_all_tests():
     """Run all test cases."""
     await test_01_simple_fill()
     await test_02_inconsistent_phrasing()
     await test_03_why_join_company()
+    await test_04_no_match_no_user_prompt()
 
 
 if __name__ == "__main__":
