@@ -1,19 +1,5 @@
 # Formless Architecture
 
-## Use Cases
-#### Job Application Form
-- Why do you want to work at Baseten? (https://jobs.ashbyhq.com/baseten/fc6e5f2e-eb2d-4a6c-8a51-8422e8662bde/application)
-- Why are you interested in working at Suno?
-- Describe your coolest project
-
-#### Google Forms (Event Registration)
-- Reality Hack is a fast-paced event that harnesses a variety of talents from participants to create something entirely new in a very short period of time. How do you envision your role in this environment and how will you contribute to your team?
-- Can you demonstrate familiarity with any tools related to design, development, or programming languages for XR?
-- (Availability?)
-
-#### Online Quiz
--
-
 ## Current Architecture
 
 ```
