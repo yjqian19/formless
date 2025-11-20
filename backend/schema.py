@@ -2,14 +2,19 @@ from pydantic import BaseModel
 from typing import Literal
 
 
-class MemoryItem(BaseModel):
+class MemoryItemCreate(BaseModel):
+    """Memory item for creation (without id)."""
     intent: str
     value: str
     type: Literal["text", "prompt"]
 
 
-class MemoryItemWithId(MemoryItem):
+class MemoryItem(BaseModel):
+    """Memory item with id (returned from API)."""
     id: str
+    intent: str
+    value: str
+    type: Literal["text", "prompt"]
 
 
 class MatchingRequest(BaseModel):

@@ -1,9 +1,10 @@
 import os
 import json
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 from openai import OpenAI
 
-from schema import MatchingRequest, MatchingResponse
+from schema import MatchingRequest, MatchingResponse, MemoryItem
 from storage import JSONStorage
 
 import dotenv
@@ -26,10 +27,8 @@ async def match_form_fields(request: MatchingRequest):
 
     Process:
     1. Get memory items by their intents
-    2. Use AI to semantically match the field with item intents
-    3. For matched item:
-       - If type is "text": return value directly
-       - If type is "prompt": generate content from prompt
+    2. Search for matching intent (search_intent)
+    3. Compose final value from match result and optional inputs (compose_value)
     """
     # Get memory items by their intents (None means all items)
     if not request.memory_intents:
@@ -43,39 +42,46 @@ async def match_form_fields(request: MatchingRequest):
             detail=f"None of the requested memory intents found: {request.memory_intents}"
         )
 
-    # Use OpenAI to semantically match the field with items
-    matched_value = await match_with_openai(
+    # Step 1: Search for matching intent
+    matched_item = await search_intent(
         parsed_field=request.parsed_field,
-        memory_items=memory_items,
+        memory_items=memory_items
+    )
+
+    # Step 2: Compose final value
+    matched_value = await compose_value(
+        matched_item=matched_item,
         user_prompt=request.user_prompt,
         context=request.context
     )
 
     # Return in dict format: {field_name: value}
-    return MatchingResponse(matched_fields={request.parsed_field: matched_value})
+    # If matched_value is None, return empty string
+    return MatchingResponse(matched_fields={request.parsed_field: matched_value or ""})
 
 
-async def match_with_openai(
+async def search_intent(
     parsed_field: str,
-    memory_items: list,
-    user_prompt: str | None = None,
-    context: str | None = None
-) -> str:
+    memory_items: list[MemoryItem]
+) -> Optional[MemoryItem]:
     """
-    Use OpenAI to semantically match a single form field with memory item intents.
+    Search for the best matching intent in memory items.
 
     Args:
         parsed_field: Form field name to match
-        memory_items: List of memory items (each has intent, value, type)
+        memory_items: List of memory items to search
 
     Returns:
-        Matched value (text value or generated content from prompt)
+        MemoryItem if a match is found, None otherwise
     """
     if not client:
         raise HTTPException(
             status_code=500,
             detail="OpenAI API key not configured. Please set OPENAI_API_KEY environment variable."
         )
+
+    if not memory_items:
+        return None
 
     # Prepare items info for AI
     items_info = [
@@ -91,14 +97,14 @@ async def match_with_openai(
     available_intents = [item.intent for item in memory_items]
 
     # Define JSON Schema for response format
-    # Response should be an object with an "intent" field (OpenAI requires object type)
+    # Allow null to indicate no match found
     response_schema = {
         "type": "object",
         "properties": {
             "intent": {
-                "type": "string",
-                "enum": available_intents,
-                "description": "The intent name that best matches the form field"
+                "type": ["string", "null"],
+                "enum": available_intents + [None],
+                "description": "The intent name that best matches the form field, or null if no intent matches well"
             }
         },
         "required": ["intent"],
@@ -110,7 +116,7 @@ async def match_with_openai(
 
 Given a form field name and available memory items (each with an intent, value, and type), determine which intent best matches the field name through semantic understanding. The intent and field name might be expressed differently but have similar meaning.
 
-Return a JSON object with an "intent" field containing the intent name that best matches the field. The intent must be one of the available intents. If no intent matches well, return the most relevant one from the available intents.
+Return a JSON object with an "intent" field containing the intent name that best matches the field. The intent must be one of the available intents. If no intent matches well semantically, return null.
 
 Example:
 Form field: "full_name"
@@ -119,23 +125,30 @@ Memory items: [
   {"intent": "contact_email", "value": "john@example.com", "type": "text"}
 ]
 Result: {"intent": "legal_name"}
+
+Example (no match):
+Form field: "favorite_color"
+Memory items: [
+  {"intent": "legal_name", "value": "John Doe", "type": "text"}
+]
+Result: {"intent": null}
 """
 
-    user_prompt = f"""Form field to match: "{parsed_field}"
+    user_prompt_text = f"""Form field to match: "{parsed_field}"
 
 Available memory items:
 {json.dumps(items_info, indent=2)}
 
 Available intents: {available_intents}
 
-Return a JSON object with an "intent" field containing the intent name that best matches this field. Use exact intent name from the available intents list. Perform semantic matching - the field name and intent might be worded differently but should have the same meaning."""
+Return a JSON object with an "intent" field containing the intent name that best matches this field. Use exact intent name from the available intents list, or null if no intent matches well. Perform semantic matching - the field name and intent might be worded differently but should have the same meaning."""
 
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"role": "user", "content": user_prompt_text}
             ],
             response_format={
                 "type": "json_schema",
@@ -143,7 +156,7 @@ Return a JSON object with an "intent" field containing the intent name that best
                     "name": "intent_match",
                     "strict": True,
                     "schema": response_schema,
-                    "description": "An object containing the intent name that matches the form field"
+                    "description": "An object containing the intent name that matches the form field, or null if no match"
                 }
             },
             temperature=0.1
@@ -152,11 +165,9 @@ Return a JSON object with an "intent" field containing the intent name that best
         result = json.loads(response.choices[0].message.content)
         matched_intent = result.get("intent")
 
+        # If no match found, return None
         if not matched_intent:
-            raise HTTPException(
-                status_code=500,
-                detail="AI response missing 'intent' field"
-            )
+            return None
 
         # Create a mapping from intent to item for quick lookup
         intent_to_item = {item.intent: item for item in memory_items}
@@ -168,48 +179,95 @@ Return a JSON object with an "intent" field containing the intent name that best
             )
 
         item = intent_to_item[matched_intent]
-
-        if item.type == "text":
-            # Direct text value - return as is
-            return item.value
-        elif item.type == "prompt":
-            # Generate content from prompt, incorporating user_prompt and context
-            return await generate_from_prompt(
-                prompt_template=item.value,
-                user_prompt=user_prompt,
-                context=context
-            )
-        else:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Unknown item type: {item.type}"
-            )
+        return item
 
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to match field with OpenAI: {str(e)}"
+            detail=f"Failed to search intent with OpenAI: {str(e)}"
         )
 
 
-async def generate_from_prompt(
-    prompt_template: str,
-    user_prompt: str | None = None,
-    context: str | None = None
-) -> str:
+async def compose_value(
+    matched_item: Optional[MemoryItem],
+    user_prompt: Optional[str] = None,
+    context: Optional[str] = None
+) -> Optional[str]:
     """
-    Generate content from a prompt template, incorporating user_prompt and context.
+    Compose the final field value from matched item and optional inputs.
 
-    Two modes:
-    1. If user_prompt is provided: Use user_prompt as primary input, enrich with context and template
-    2. If user_prompt is None: Use prompt_template with context substitution
+    Priority: user_prompt > context > memory_item
+
+    Logic:
+    - If user_prompt exists: always generate (prompt class), even if matched_item is None
+    - If no user_prompt:
+      - matched_item is None → return None
+      - matched_item.type == "text" → return item.value directly
+      - matched_item.type == "prompt" → generate content
 
     Args:
-        prompt_template: The prompt template from memory (may contain placeholders like {company name})
-        user_prompt: User-provided prompt/outline (for Inline Edit scenarios)
+        matched_item: Memory item from search_intent (can be None)
+        user_prompt: User-provided prompt/outline (highest priority)
         context: Short-term context (e.g., company introduction, page content)
+
+    Returns:
+        Final value string, or None if cannot resolve
+    """
+    if not client:
+        raise HTTPException(
+            status_code=500,
+            detail="OpenAI API key not configured. Please set OPENAI_API_KEY environment variable."
+        )
+
+    # If user_prompt exists, always generate (prompt class)
+    # Priority: user_prompt > context > memory_item (if exists)
+    if user_prompt:
+        memory_item_value = matched_item.value if matched_item else None
+        return await generate_content(
+            user_prompt=user_prompt,
+            context=context,
+            memory_item_value=memory_item_value
+        )
+
+    # No user_prompt: check matched_item
+    if not matched_item:
+        return None
+
+    # matched_item exists
+    if matched_item.type == "text":
+        # Direct text value - return as is
+        return matched_item.value
+    elif matched_item.type == "prompt":
+        # Generate content from prompt
+        # Priority: context > memory_item
+        return await generate_content(
+            user_prompt=None,
+            context=context,
+            memory_item_value=matched_item.value
+        )
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unknown item type: {matched_item.type}"
+        )
+
+
+async def generate_content(
+    user_prompt: Optional[str] = None,
+    context: Optional[str] = None,
+    memory_item_value: Optional[str] = None
+) -> str:
+    """
+    Generate content with priority: user_prompt > context > memory_item_value.
+
+    The memory_item_value can be either a template (with placeholders) or prompt instructions.
+
+    Args:
+        user_prompt: User-provided prompt/outline (highest priority)
+        context: Short-term context (e.g., company introduction, page content)
+        memory_item_value: Memory item value (template or prompt instruction, lowest priority)
 
     Returns:
         Generated content
@@ -220,9 +278,11 @@ async def generate_from_prompt(
             detail="OpenAI API key not configured. Please set OPENAI_API_KEY environment variable."
         )
 
-    # Build the generation prompt
+    # Build the generation prompt with priority: user_prompt > context > memory_item_value
+    messages_content = ""
+
     if user_prompt:
-        # Way 2: Inline Edit - user provides framework/outline as primary input
+        # user_prompt is highest priority - use as primary input
         messages_content = f"""Based on the following outline/framework, generate a complete, professional response:
 
 User's outline/framework:
@@ -234,23 +294,30 @@ User's outline/framework:
 {context}
 
 """
-        if prompt_template:
-            messages_content += f"""Reference template (for style/structure guidance):
-{prompt_template}
+        if memory_item_value:
+            messages_content += f"""Reference template or instructions (for style/structure guidance):
+{memory_item_value}
 
 """
-        messages_content += """Generate a complete response based on the user's outline, incorporating the context information, and following the style/structure suggested by the template if provided."""
+        messages_content += """Generate a complete response based on the user's outline, incorporating the context information, and following the style/structure suggested by the template/instructions if provided."""
     else:
-        # Way 1: Use prompt template with context substitution
-        messages_content = prompt_template
+        # No user_prompt: use memory_item_value as base
+        if memory_item_value:
+            messages_content = memory_item_value
+        else:
+            # No user_prompt and no memory_item_value: use context only
+            messages_content = "Generate a professional response based on the following context:\n\n"
 
         if context:
-            messages_content += f"""
+            if memory_item_value:
+                messages_content += f"""
 
 Additional context:
 {context}
 
 Please incorporate this context into your response and replace any placeholders (like {{company name}} or {{company_name}}) with appropriate information from the context provided above."""
+            else:
+                messages_content += context
 
     # Define JSON Schema to ensure AI returns plain text response
     # OpenAI requires object type, so we wrap it in an object with a "response" field
@@ -290,5 +357,5 @@ Please incorporate this context into your response and replace any placeholders 
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to generate content from prompt: {str(e)}"
+            detail=f"Failed to generate content: {str(e)}"
         )

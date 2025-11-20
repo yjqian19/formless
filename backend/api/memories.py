@@ -1,25 +1,25 @@
 from fastapi import APIRouter, HTTPException
 
-from schema import MemoryItem, MemoryItemWithId
+from schema import MemoryItem, MemoryItemCreate
 from storage import JSONStorage
 
 router = APIRouter()
 storage = JSONStorage()
 
 
-@router.get("", response_model=list[MemoryItemWithId])
+@router.get("", response_model=list[MemoryItem])
 def get_all_memories():
     """Get all memory items."""
     return storage.get_all_items()
 
 
-@router.post("", response_model=MemoryItemWithId)
-def create_memory(item: MemoryItem):
+@router.post("", response_model=MemoryItem)
+def create_memory(item: MemoryItemCreate):
     """Create a new memory item."""
     return storage.create_item(item)
 
 
-@router.get("/{item_id}", response_model=MemoryItemWithId)
+@router.get("/{item_id}", response_model=MemoryItem)
 def get_memory(item_id: str):
     """Get a specific memory item."""
     item = storage.get_item(item_id)
@@ -28,8 +28,8 @@ def get_memory(item_id: str):
     return item
 
 
-@router.put("/{item_id}", response_model=MemoryItemWithId)
-def update_memory(item_id: str, item: MemoryItem):
+@router.put("/{item_id}", response_model=MemoryItem)
+def update_memory(item_id: str, item: MemoryItemCreate):
     """Update a memory item."""
     updated_item = storage.update_item(item_id, item)
     if updated_item is None:
