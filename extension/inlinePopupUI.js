@@ -1,6 +1,5 @@
 // Store current popup state
 let currentPopup = null;
-let currentBackdrop = null;
 let currentFieldId = null;
 
 // Store memories and selections
@@ -20,10 +19,6 @@ async function showInlinePopup(field) {
   // Load memories from backend
   await loadMemoriesForInlinePopup();
 
-  // Create backdrop
-  currentBackdrop = createBackdrop();
-  document.body.appendChild(currentBackdrop);
-
   // Create popup
   currentPopup = createPopupElement(field);
   document.body.appendChild(currentPopup);
@@ -35,16 +30,6 @@ async function showInlinePopup(field) {
 }
 
 /**
- * Create backdrop overlay
- */
-function createBackdrop() {
-  const backdrop = document.createElement('div');
-  backdrop.className = 'formless-inline-backdrop';
-  backdrop.addEventListener('click', closeInlinePopup);
-  return backdrop;
-}
-
-/**
  * Create popup element
  */
 function createPopupElement(field) {
@@ -52,6 +37,8 @@ function createPopupElement(field) {
   popup.className = 'formless-inline-popup';
 
   popup.innerHTML = `
+    <button class="formless-close-button" id="formless-inline-close" title="Close">&times;</button>
+
     <h1>Formless</h1>
 
     <div class="section-title">
@@ -99,6 +86,9 @@ function createPopupElement(field) {
  * Attach event listeners to popup elements
  */
 function attachPopupEventListeners(popup, field) {
+  // Close button (X)
+  popup.querySelector('#formless-inline-close').addEventListener('click', closeInlinePopup);
+
   // Cancel button
   popup.querySelector('#formless-inline-cancel').addEventListener('click', closeInlinePopup);
 
@@ -116,42 +106,35 @@ function attachPopupEventListeners(popup, field) {
     setMemoryMode('custom', popup);
   });
 
-  // Stop propagation to prevent backdrop click
-  popup.addEventListener('click', (e) => {
-    e.stopPropagation();
-  });
+
+  // ESC key to close
+  const escapeHandler = (e) => {
+    if (e.key === 'Escape') {
+      closeInlinePopup();
+    }
+  };
+  document.addEventListener('keydown', escapeHandler);
+
+  // Store handler for cleanup
+  popup._escapeHandler = escapeHandler;
 }
 
 /**
- * Position popup relative to field
+ * Position popup on right side of screen
  */
 function positionPopup(popup, field) {
-  const fieldRect = field.getBoundingClientRect();
+  // Position popup on the right side of the screen
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
-  // Position popup to the right of the field, aligned horizontally but not overlapping
-  let left = fieldRect.right + scrollLeft + 12; // 12px gap
-  let top = fieldRect.top + scrollTop;
+  // Fixed to right side with some padding
+  popup.style.top = `${scrollTop + 20}px`;
+  popup.style.right = '20px';
+  popup.style.left = 'auto'; // Clear any left positioning
 
-  // Check if popup would go off-screen to the right
-  const popupWidth = 300; // From CSS
-  if (left + popupWidth > window.innerWidth + scrollLeft) {
-    // Position to the left of the field instead
-    left = fieldRect.left + scrollLeft - popupWidth - 12;
-  }
-
-  // Ensure popup doesn't go off-screen vertically
-  const popupHeight = popup.offsetHeight;
-  if (top + popupHeight > window.innerHeight + scrollTop) {
-    top = window.innerHeight + scrollTop - popupHeight - 20;
-  }
-  if (top < scrollTop) {
-    top = scrollTop + 20;
-  }
-
-  popup.style.top = `${top}px`;
-  popup.style.left = `${left}px`;
+  // Use fixed positioning for smoother behavior
+  popup.style.position = 'fixed';
+  popup.style.top = '20px';
+  popup.style.right = '20px';
 }
 
 /**
@@ -364,13 +347,12 @@ function getParsedFieldName(field) {
  */
 function closeInlinePopup() {
   if (currentPopup) {
+    // Remove ESC key handler
+    if (currentPopup._escapeHandler) {
+      document.removeEventListener('keydown', currentPopup._escapeHandler);
+    }
     currentPopup.remove();
     currentPopup = null;
-  }
-
-  if (currentBackdrop) {
-    currentBackdrop.remove();
-    currentBackdrop = null;
   }
 
   currentFieldId = null;
