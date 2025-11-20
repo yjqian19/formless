@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Job Application Form</title>
+  <title>Seminar Registration Form</title>
   <style>
     * {
       box-sizing: border-box;
@@ -35,44 +35,32 @@
       font-weight: 600;
     }
 
-    .job-info {
+    .event-info {
       margin-bottom: 30px;
       padding-bottom: 20px;
       border-bottom: 1px solid #e0e0e0;
     }
 
-    .job-info-section {
+    .event-info-section {
       margin-bottom: 20px;
     }
 
-    .job-info-section:last-child {
+    .event-info-section:last-child {
       margin-bottom: 0;
     }
 
-    .job-info-section h2 {
+    .event-info-section h2 {
       color: #333;
       font-size: 16px;
       font-weight: 600;
       margin-bottom: 8px;
     }
 
-    .job-info-section p {
+    .event-info-section p {
       color: #666;
       font-size: 14px;
       line-height: 1.6;
       margin-bottom: 8px;
-    }
-
-    .job-info-section ul {
-      color: #666;
-      font-size: 14px;
-      line-height: 1.6;
-      margin-left: 20px;
-      margin-top: 8px;
-    }
-
-    .job-info-section li {
-      margin-bottom: 4px;
     }
 
     .form-group {
@@ -89,7 +77,7 @@
 
     input[type="text"],
     input[type="email"],
-    textarea {
+    input[type="url"] {
       width: 100%;
       padding: 10px;
       border: 1px solid #ddd;
@@ -98,17 +86,25 @@
       font-family: inherit;
     }
 
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      min-height: 100px;
+      resize: vertical;
+    }
+
     input[type="text"]:focus,
     input[type="email"]:focus,
+    input[type="url"]:focus,
     textarea:focus {
       outline: none;
       border-color: #999;
     }
 
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
 
     button {
       width: 100%;
@@ -176,54 +172,51 @@
 </head>
 <body>
   <div class="container">
-    <h1>Job Application Form</h1>
+    <h1>Tech Sharing Seminar 2025 - Registration</h1>
 
-    <div class="job-info">
-      <div class="job-info-section">
-        <h2>About Formless</h2>
-        <p>Formless is an innovative browser extension that revolutionizes how users interact with web forms. Our AI-powered technology automatically fills out forms based on your saved memories and preferences, making online form completion effortless and efficient.</p>
-        <p>We're building the future of form automation, combining intelligent field matching with a seamless user experience to eliminate repetitive data entry across the web.</p>
+    <div class="event-info">
+      <div class="event-info-section">
+        <h2>About the Seminar</h2>
+        <p>Join us for a collaborative sharing session where developers and creators come together to present their previous projects, share insights, and learn from each other. This seminar provides a platform for showcasing innovative work and building connections within the tech community.</p>
       </div>
 
-      <div class="job-info-section">
-        <h2>About Role</h2>
-        <p>At Formless, you'll work on cutting-edge form filling technology, building intelligent field detection and memory management systems. You'll own work end‑to‑end with a focus on performance, accuracy, and elegant UX that makes form completion feel magical.</p>
-      </div>
-
-      <div class="job-info-section">
-        <h2>Requirements</h2>
-        <ul>
-          <li>3+ years of experience in software development</li>
-          <li>Strong proficiency in JavaScript, HTML, and CSS</li>
-          <li>Excellent problem-solving and communication skills</li>
-        </ul>
+      <div class="event-info-section">
+        <h2>Seminar Details</h2>
+        <p><strong>Date:</strong> December 15, 2025</p>
+        <p><strong>Location:</strong> San Francisco Convention Center</p>
+        <p><strong>Time:</strong> 2:00 PM - 5:00 PM PST</p>
       </div>
     </div>
 
     <form>
       <div class="form-group">
-        <label for="linkedin">Your LinkedIn Profile</label>
-        <input type="text" id="linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/...">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" placeholder="Enter your full name">
       </div>
 
       <div class="form-group">
-        <label for="project">What's your proudest project?</label>
-        <textarea id="project" name="project" placeholder="Describe your project..."></textarea>
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="your.email@example.com">
       </div>
 
       <div class="form-group">
-        <label for="why_join">Why do you want to work in Formless?</label>
-        <textarea id="why_join" name="why_join" placeholder="Tell us why you want to work here..."></textarea>
+        <label for="linkedin">LinkedIn Profile URL</label>
+        <input type="url" id="linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/...">
       </div>
 
-      <button type="submit">Submit Application</button>
+      <div class="form-group">
+        <label for="previous-project">What previous project would you like to share with others?</label>
+        <textarea id="previous-project" name="previous-project" rows="4" placeholder="Please describe a previous project you've worked on that you'd like to share with the community..."></textarea>
+      </div>
+
+      <button type="submit">Register for Seminar</button>
     </form>
   </div>
 
   <!-- Navigation Panel -->
   <div class="nav-panel">
-    <button class="nav-button active" data-page="1" onclick="navigateToPage(1)">1</button>
-    <button class="nav-button" data-page="2" onclick="navigateToPage(2)">2</button>
+    <button class="nav-button" data-page="1" onclick="navigateToPage(1)">1</button>
+    <button class="nav-button active" data-page="2" onclick="navigateToPage(2)">2</button>
   </div>
 
   <script>
