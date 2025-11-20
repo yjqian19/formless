@@ -13,7 +13,7 @@ class MemoryItemWithId(MemoryItem):
 
 
 class MatchingRequest(BaseModel):
-    parsed_fields: list[str]
+    parsed_field: str  # Single form field name to match
     memory_intents: list[str] | None = None  # List of intent names to match, None means all
 
 

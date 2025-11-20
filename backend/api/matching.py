@@ -17,13 +17,13 @@ client = OpenAI(api_key=api_key) if api_key else None
 @router.post("", response_model=MatchingResponse)
 async def match_form_fields(request: MatchingRequest):
     """
-    Match parsed form fields with memory data using OpenAI semantic matching.
-    This is called by the Extension to get values for form fields.
+    Match a parsed form field with memory data using OpenAI semantic matching.
+    This is called by the Extension to get value for a single form field.
 
     Process:
     1. Get memory items by their intents
-    2. Use AI to semantically match each field with item intents
-    3. For matched items:
+    2. Use AI to semantically match the field with item intents
+    3. For matched item:
        - If type is "text": return value directly
        - If type is "prompt": generate content from prompt
     """
@@ -39,28 +39,29 @@ async def match_form_fields(request: MatchingRequest):
             detail=f"None of the requested memory intents found: {request.memory_intents}"
         )
 
-    # Use OpenAI to semantically match fields with items
-    matched_fields = await match_with_openai(
-        parsed_fields=request.parsed_fields,
+    # Use OpenAI to semantically match the field with items
+    matched_value = await match_with_openai(
+        parsed_field=request.parsed_field,
         memory_items=memory_items
     )
 
-    return MatchingResponse(matched_fields=matched_fields)
+    # Return in dict format: {field_name: value}
+    return MatchingResponse(matched_fields={request.parsed_field: matched_value})
 
 
 async def match_with_openai(
-    parsed_fields: list[str],
+    parsed_field: str,
     memory_items: list
-) -> dict[str, str]:
+) -> str:
     """
-    Use OpenAI to semantically match form fields with memory item intents.
+    Use OpenAI to semantically match a single form field with memory item intents.
 
     Args:
-        parsed_fields: List of form field names to match
+        parsed_field: Form field name to match
         memory_items: List of memory items (each has intent, value, type)
 
     Returns:
-        Dictionary mapping field names to values (text values or generated content)
+        Matched value (text value or generated content from prompt)
     """
     if not client:
         raise HTTPException(
@@ -82,42 +83,37 @@ async def match_with_openai(
     available_intents = [item.intent for item in memory_items]
 
     # Define JSON Schema for response format
-    # Response should be an object mapping field names (strings) to intent names (strings)
+    # Response should be a string representing the matching intent name
     response_schema = {
-        "type": "object",
-        "properties": {},
-        "additionalProperties": {
-            "type": "string",
-            "enum": available_intents
-        },
-        "required": []
+        "type": "string",
+        "enum": available_intents,
+        "description": "The intent name that best matches the form field"
     }
 
     # Create prompt for semantic matching
-    system_prompt = """You are a form field matching assistant. Your task is to semantically match form field names with memory item intents.
+    system_prompt = """You are a form field matching assistant. Your task is to semantically match a form field name with a memory item intent.
 
-Given a list of form field names and available memory items (each with an intent, value, and type), determine which intent best matches each field name through semantic understanding. The intent and field name might be expressed differently but have similar meaning.
+Given a form field name and available memory items (each with an intent, value, and type), determine which intent best matches the field name through semantic understanding. The intent and field name might be expressed differently but have similar meaning.
 
-Return a JSON object mapping field names to intent names. If a field doesn't match any intent, omit it from the result. Each intent value must be one of the available intents.
+Return the intent name (as a string) that best matches the field. The intent must be one of the available intents. If no intent matches well, return the most relevant one from the available intents.
 
 Example:
-Form fields: ["full_name", "email_address", "phone"]
+Form field: "full_name"
 Memory items: [
   {"intent": "legal_name", "value": "John Doe", "type": "text"},
-  {"intent": "contact_email", "value": "john@example.com", "type": "text"},
-  {"intent": "phone_number", "value": "123-456-7890", "type": "text"}
+  {"intent": "contact_email", "value": "john@example.com", "type": "text"}
 ]
-Result: {"full_name": "legal_name", "email_address": "contact_email", "phone": "phone_number"}
+Result: "legal_name"
 """
 
-    user_prompt = f"""Form fields to match: {parsed_fields}
+    user_prompt = f"""Form field to match: "{parsed_field}"
 
 Available memory items:
 {json.dumps(items_info, indent=2)}
 
 Available intents: {available_intents}
 
-Return a JSON object mapping each form field to its best matching intent. Use exact intent names from the available intents list. Perform semantic matching - the field name and intent might be worded differently but should have the same meaning."""
+Return the intent name (as a string) that best matches this field. Use exact intent name from the available intents list. Perform semantic matching - the field name and intent might be worded differently but should have the same meaning."""
 
     try:
         response = client.chat.completions.create(
@@ -129,43 +125,46 @@ Return a JSON object mapping each form field to its best matching intent. Use ex
             response_format={
                 "type": "json_schema",
                 "json_schema": {
-                    "name": "field_intent_mapping",
+                    "name": "intent_match",
                     "strict": True,
                     "schema": response_schema,
-                    "description": "Maps form field names to memory item intents"
+                    "description": "The intent name that matches the form field"
                 }
             },
             temperature=0.1
         )
 
-        field_to_intent = json.loads(response.choices[0].message.content)
-
-        # Build matched_fields result
-        matched_fields = {}
+        matched_intent = json.loads(response.choices[0].message.content)
 
         # Create a mapping from intent to item for quick lookup
         intent_to_item = {item.intent: item for item in memory_items}
 
-        for field_name, intent in field_to_intent.items():
-            if intent not in intent_to_item:
-                continue
+        if matched_intent not in intent_to_item:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Matched intent '{matched_intent}' not found in memory items"
+            )
 
-            item = intent_to_item[intent]
+        item = intent_to_item[matched_intent]
 
-            if item.type == "text":
-                # Direct text value - return as is
-                matched_fields[field_name] = item.value
-            elif item.type == "prompt":
-                # Generate content from prompt
-                generated_value = await generate_from_prompt(item.value)
-                matched_fields[field_name] = generated_value
+        if item.type == "text":
+            # Direct text value - return as is
+            return item.value
+        elif item.type == "prompt":
+            # Generate content from prompt
+            return await generate_from_prompt(item.value)
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Unknown item type: {item.type}"
+            )
 
-        return matched_fields
-
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to match fields with OpenAI: {str(e)}"
+            detail=f"Failed to match field with OpenAI: {str(e)}"
         )
 
 
