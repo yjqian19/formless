@@ -1,33 +1,4 @@
-const memoryHub = {
-  "basic_info": [
-    {
-      "intent": "legal_name",
-      "value": "Yujia Qian",
-      "type": "text"
-    },
-    {
-      "intent": "contact_email",
-      "value": "yujia@example.com",
-      "type": "text"
-    }
-  ],
-  "why_join": [
-    {
-      "intent": "why_join_company",
-      "value": "Write why I want to work at this company using the themes: user impact, fast iteration, ownership.",
-      "type": "prompt"
-    }
-  ]
-}
-
-const parsedFields = ['full_name', 'email', 'why_join'];
-
-// Fake composed result - simulating backend response
-const fakeComposedResult = {
-  full_name: 'Yujia Qian',
-  email: 'yujia@example.com',
-  why_join: "I'm excited to join a team that deeply values user impact. I'm motivated by the idea of building products that genuinely improve people's lives, and I hope to contribute to meaningful, user-centered outcomes through thoughtful design and execution."
-};
+// Import API functions (api.js must be loaded before fill.js in manifest.json)
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'autofill') {
@@ -37,65 +8,125 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function handleAutofill(message, sendResponse) {
-  // Popup always sends both memoryNames and fieldIds
-  const memoryNames = message.memoryNames || [];
+  // Popup sends fieldIds (currently only supports single field)
   const fieldIds = message.fieldIds || [];
+  const memoryIntents = message.memoryIntents || null; // List of intent names, or null for all
+  const userPrompt = message.userPrompt || null;
+  const context = message.context || null;
 
-  if (memoryNames.length === 0 || fieldIds.length === 0) {
-    sendResponse({ success: false });
+  if (fieldIds.length === 0) {
+    sendResponse({ success: false, error: 'No fields selected' });
     return;
   }
 
-  // Compose result from parsedFields and memoryNames (async with 5 second delay)
-  const result = await composeResult(parsedFields, memoryNames);
+  // Currently only support single field
+  if (fieldIds.length > 1) {
+    console.warn('Multiple fields selected, but only single field is supported. Using first field.');
+  }
 
-  // Fill form with composed result, only for selected fields
-  fillFormWithComposedResult(result, fieldIds);
+  const fieldId = fieldIds[0];
+  const field = document.getElementById(fieldId);
 
-  // Show floating notification
-  showNotification(memoryNames, fieldIds);
+  if (!field) {
+    sendResponse({ success: false, error: `Field ${fieldId} not found in DOM` });
+    return;
+  }
 
-  // Send response back to popup
-  sendResponse({ success: true });
-}
+  try {
+    // Get parsed field name from field (use label, placeholder, or field id)
+    const parsedField = getParsedFieldName(field);
 
-async function composeResult(parsedFields, memoryNames) {
-  // Extract selected memories from memoryHub based on memory names
-  const selectedMemories = {};
-  memoryNames.forEach(memoryName => {
-    if (memoryHub[memoryName]) {
-      selectedMemories[memoryName] = memoryHub[memoryName];
-    }
-  });
+    // Call backend matching API
+    const result = await matchField(parsedField, memoryIntents, userPrompt, context);
 
-  // Simulate 5 second processing time (like calling backend API)
-  console.log('Composing result with:', { parsedFields, selectedMemories });
+    // Fill the field with matched value
+    // Backend returns {matched_fields: {parsed_field: value}}
+    if (result.matched_fields && Object.keys(result.matched_fields).length > 0) {
+      // Get the first (and only) value from matched_fields
+      const matchedValue = Object.values(result.matched_fields)[0];
 
-  await new Promise(resolve => setTimeout(resolve, 5000));
+      // Only fill if value is not empty (empty string means no match)
+      if (matchedValue && matchedValue.trim() !== '') {
+        field.value = matchedValue;
 
-  // Transform memory items into a composed result object
-  // For now, return the fake composedResult after waiting
-  // In the future, this would process parsedFields and selectedMemories to generate the result
-  console.log('Composition complete!');
-  return fakeComposedResult;
-}
+        // Show floating notification
+        showNotification([fieldId], fieldId);
 
-function fillFormWithComposedResult(composedResult, fieldIds) {
-  // Fill the form with the composed result, only for selected fields
-  // fieldIds is always provided from popup
-  fieldIds.forEach(fieldId => {
-    const field = document.getElementById(fieldId);
-    if (field && composedResult[fieldId] !== undefined) {
-      field.value = composedResult[fieldId];
-    } else if (field) {
-      console.warn(`No value found for field ${fieldId}`);
+        sendResponse({ success: true });
+      } else {
+        // No match found (none case) - silently return success, don't show error
+        console.log('No match found for this field (none case)');
+        sendResponse({ success: true });
+      }
     } else {
-      console.warn(`Field ${fieldId} not found in DOM`);
+      // No matched_fields in response - silently return success
+      console.log('No matched_fields in API response');
+      sendResponse({ success: true });
     }
-  });
+  } catch (error) {
+    console.error('Error during autofill:', error);
+    sendResponse({ success: false, error: error.message || 'Unknown error' });
+  }
 }
 
-function showNotification(memories, fieldIds) {
+/**
+ * Get all form fields from the page
+ */
+function handleGetAllFields(sendResponse) {
+  const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], textarea, select');
+  const fields = [];
+
+  inputs.forEach(input => {
+    if (input.id) {
+      // Try to find associated label
+      let label = null;
+      const labelElement = document.querySelector(`label[for="${input.id}"]`);
+      if (labelElement && labelElement.textContent) {
+        label = labelElement.textContent.trim();
+      } else if (input.placeholder) {
+        label = input.placeholder.trim();
+      } else if (input.getAttribute('aria-label')) {
+        label = input.getAttribute('aria-label').trim();
+      }
+
+      fields.push({
+        id: input.id,
+        label: label || input.id
+      });
+    }
+  });
+
+  sendResponse({ fields: fields });
+}
+
+/**
+ * Get parsed field name from DOM element
+ * Tries to get label, placeholder, or falls back to field id
+ */
+function getParsedFieldName(field) {
+  // Try to find associated label
+  if (field.id) {
+    const label = document.querySelector(`label[for="${field.id}"]`);
+    if (label && label.textContent) {
+      return label.textContent.trim();
+    }
+  }
+
+  // Try placeholder
+  if (field.placeholder) {
+    return field.placeholder.trim();
+  }
+
+  // Try aria-label
+  if (field.getAttribute('aria-label')) {
+    return field.getAttribute('aria-label').trim();
+  }
+
+  // Fall back to field id
+  return field.id || 'unknown_field';
+}
+
+function showNotification(fieldIds, fieldId) {
   let notification = document.getElementById('formless-notification');
   if (!notification) {
     notification = document.createElement('div');
@@ -115,7 +146,12 @@ function showNotification(memories, fieldIds) {
     `;
     document.body.appendChild(notification);
   }
-  const memoryText = memories.join(', ');
-  const fieldText = ` (Fields: ${fieldIds.join(', ')})`;
-  notification.textContent = `Filled: ${memoryText}${fieldText}`;
+  notification.textContent = `Filled: ${fieldId}`;
+
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    if (notification && notification.parentNode) {
+      notification.parentNode.removeChild(notification);
+    }
+  }, 3000);
 }

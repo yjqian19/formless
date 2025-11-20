@@ -106,38 +106,21 @@ function handleFieldClick(event) {
   console.log('Field clicked:', fieldId, field);
 
   if (fieldId) {
-    // Save to storage instead of sending message to popup
-    chrome.storage.local.get(['selectedFieldIds'], (result) => {
-      const currentFields = result.selectedFieldIds || [];
-      if (!currentFields.includes(fieldId)) {
-        const updatedFields = [...currentFields, fieldId];
-        chrome.storage.local.set({ selectedFieldIds: updatedFields }, () => {
-          console.log('Field saved to storage:', fieldId, 'All fields:', updatedFields);
+    // Save single field to storage
+    chrome.storage.local.set({ selectedFieldId: fieldId }, () => {
+      console.log('Field saved to storage:', fieldId);
 
-          // Notify popup if it's open (optional, but helps with real-time updates)
-          chrome.runtime.sendMessage({
-            action: 'fieldSelected',
-            fieldId: fieldId
-          }).catch(() => {
-            // Popup might be closed, that's okay
-          });
+      // Notify popup if it's open
+      chrome.runtime.sendMessage({
+        action: 'fieldSelected',
+        fieldId: fieldId
+      }).catch(() => {
+        // Popup might be closed, that's okay
+      });
 
-          // Auto-disable field picker after selecting a field
-          console.log('Auto-disabling field picker after field selection');
-          disableFieldPicker();
-
-          // Send message to popup to notify that picker is disabled
-          chrome.runtime.sendMessage({
-            action: 'fieldPickerDisabled'
-          }).catch(() => {
-            // Popup might be closed, that's okay
-          });
-        });
-      } else {
-        // Field already selected, just disable picker
-        console.log('Field already selected, disabling picker');
-        disableFieldPicker();
-      }
+      // Auto-disable field picker after selecting a field
+      console.log('Auto-disabling field picker after field selection');
+      disableFieldPicker();
     });
 
     // Visual feedback

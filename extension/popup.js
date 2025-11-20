@@ -1,240 +1,221 @@
-// Store selected memory names
-let selectedMemoryNames = ['basic_info', 'why_join'];
+// Store selected memory intents (from backend)
+let selectedMemoryIntents = [];
 
-// Store selected field IDs (only used in custom mode)
-let selectedFieldIds = [];
-let fieldMode = 'all'; // 'all' or 'custom'
-// Predefined field IDs for 'all' mode
-const ALL_FIELDS = ['full_name', 'email', 'why_join'];
+// Store all available memory items from backend
+let availableMemories = [];
 
-// Handle checkbox changes from Hub
-document.querySelectorAll('#memoryFromHub input[type="checkbox"]').forEach(checkbox => {
-  checkbox.addEventListener('change', updateSelectedMemoryNames);
-});
+// Store selected field ID (single field only)
+let selectedFieldId = null;
 
-function updateSelectedMemoryNames() {
-  selectedMemoryNames = [];
-  document.querySelectorAll('#memoryFromHub input[type="checkbox"]:checked').forEach(checkbox => {
-    selectedMemoryNames.push(checkbox.value);
+/**
+ * Load memories from backend and display them
+ */
+async function loadMemoriesFromBackend() {
+  try {
+    availableMemories = await getAllMemories();
+    renderMemoryCheckboxes();
+  } catch (error) {
+    console.error('Failed to load memories:', error);
+    const memoryBox = document.getElementById('memoryFromHub');
+    if (memoryBox) {
+      memoryBox.innerHTML = `<div style="color: #999; font-size: 12px; padding: 10px;">Failed to load memories. Please check backend connection.</div>`;
+    }
+  }
+}
+
+/**
+ * Render memory checkboxes based on available memories
+ */
+function renderMemoryCheckboxes() {
+  const memoryBox = document.getElementById('memoryFromHub');
+  if (!memoryBox) return;
+
+  if (availableMemories.length === 0) {
+    memoryBox.innerHTML = '<div style="color: #999; font-size: 12px; padding: 10px;">No memories available</div>';
+    return;
+  }
+
+  // Clear existing content
+  memoryBox.innerHTML = '';
+
+  // Create checkboxes for each memory item (display intent)
+  availableMemories.forEach(memory => {
+    const label = document.createElement('label');
+    label.style.cssText = 'display: flex; align-items: center; padding: 8px; cursor: pointer;';
+    label.style.marginBottom = '4px';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = memory.intent;
+    checkbox.style.marginRight = '8px';
+    checkbox.addEventListener('change', updateSelectedMemoryIntents);
+
+    const span = document.createElement('span');
+    span.textContent = memory.intent;
+    span.style.fontSize = '13px';
+    span.style.color = '#333';
+
+    label.appendChild(checkbox);
+    label.appendChild(span);
+    memoryBox.appendChild(label);
+  });
+
+  // Default: select all memories
+  selectedMemoryIntents = availableMemories.map(m => m.intent);
+  document.querySelectorAll('#memoryFromHub input[type="checkbox"]').forEach(checkbox => {
+    checkbox.checked = true;
   });
 
   updateAutoFillButtonState();
 }
 
-// Field mode switching
-document.getElementById('modeAllFields').addEventListener('click', () => {
-  fieldMode = 'all';
-  updateFieldModeUI();
-  updateSelectedFieldsDisplay();
+/**
+ * Update selected memory intents based on checked checkboxes
+ */
+function updateSelectedMemoryIntents() {
+  selectedMemoryIntents = [];
+  document.querySelectorAll('#memoryFromHub input[type="checkbox"]:checked').forEach(checkbox => {
+    selectedMemoryIntents.push(checkbox.value);
+  });
+
   updateAutoFillButtonState();
+}
 
-  // Disable field picker mode in content script
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.sendMessage(tabs[0].id, { action: 'disableFieldPicker' });
-  });
-});
-
-document.getElementById('modeCustomFields').addEventListener('click', () => {
-  fieldMode = 'custom';
-  // Don't reset - load from storage instead
-  loadSelectedFieldsFromStorage();
-  updateFieldModeUI();
-  updateSelectedFieldsDisplay();
-  updateAutoFillButtonState();
-
-  // Make sure field picker is disabled initially
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs && tabs[0]) {
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'disableFieldPicker' });
-    }
-  });
-});
-
-// Add field button click handler
-document.getElementById('addFieldBtn').addEventListener('click', () => {
-  // Enable field picker when add button is clicked
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs && tabs[0]) {
-      console.log('Enabling field picker via add button');
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'enableFieldPicker' }, (response) => {
-        if (chrome.runtime.lastError) {
-          console.error('Error enabling field picker:', chrome.runtime.lastError);
-          alert('Error enabling field picker. Please refresh the page and try again.');
-        } else {
-          console.log('Field picker enabled successfully:', response);
-          // Hide add button and show picker mode indicator
-          document.getElementById('addFieldBtn').style.display = 'none';
-          document.getElementById('fieldPickerMode').style.display = 'block';
-        }
-      });
-    }
-  });
-});
-
-// Load selected fields from storage
-function loadSelectedFieldsFromStorage() {
+// Load selected field from storage and update select display
+function loadSelectedFieldFromStorage() {
   return new Promise((resolve) => {
-    chrome.storage.local.get(['selectedFieldIds'], (result) => {
-      selectedFieldIds = result.selectedFieldIds || [];
-      updateSelectedFieldsDisplay();
+    chrome.storage.local.get(['selectedFieldId'], (result) => {
+      selectedFieldId = result.selectedFieldId || null;
+      updateFieldSelectDisplay();
       updateAutoFillButtonState();
       resolve();
     });
   });
 }
 
-// Save selected fields to storage
-function saveSelectedFieldsToStorage() {
-  chrome.storage.local.set({ selectedFieldIds: selectedFieldIds });
-}
+// Update field select display to show current selected field
+function updateFieldSelectDisplay() {
+  const fieldSelect = document.getElementById('fieldSelect');
+  if (!fieldSelect) return;
 
-function updateFieldModeUI() {
-  const allBtn = document.getElementById('modeAllFields');
-  const customBtn = document.getElementById('modeCustomFields');
-  const pickerMode = document.getElementById('fieldPickerMode');
-  const addFieldBtn = document.getElementById('addFieldBtn');
-
-  if (fieldMode === 'all') {
-    allBtn.classList.add('active');
-    customBtn.classList.remove('active');
-    pickerMode.style.display = 'none';
-    addFieldBtn.style.display = 'none';
-    updateSelectedFieldsDisplay();
-    updateAutoFillButtonState();
+  if (selectedFieldId) {
+    // Show selected field
+    fieldSelect.textContent = selectedFieldId;
+    fieldSelect.classList.remove('empty');
   } else {
-    allBtn.classList.remove('active');
-    customBtn.classList.add('active');
-    // Show add button if no fields selected, otherwise hide it
-    if (selectedFieldIds.length === 0) {
-      addFieldBtn.style.display = 'flex';
-      pickerMode.style.display = 'none';
-    } else {
-      addFieldBtn.style.display = 'none';
-      pickerMode.style.display = 'none'; // Hide picker mode indicator when fields are selected
-    }
-    updateSelectedFieldsDisplay();
-    updateAutoFillButtonState();
+    // Show placeholder
+    fieldSelect.textContent = 'Select a field...';
+    fieldSelect.classList.add('empty');
   }
 }
 
-function updateSelectedFieldsDisplay() {
-  const display = document.getElementById('selectedFields');
-
-  if (fieldMode === 'all') {
-    display.textContent = `All Fields (${ALL_FIELDS.length} fields: ${ALL_FIELDS.join(', ')})`;
-    display.classList.remove('empty');
-  } else {
-    if (selectedFieldIds.length === 0) {
-      display.textContent = 'Custom Select (no fields selected)';
-      display.classList.add('empty');
-    } else {
-      const fieldsHtml = selectedFieldIds.map(fieldId =>
-        `<span class="selected-field-item">${fieldId}<span class="remove-btn" data-field-id="${fieldId}">×</span></span>`
-      ).join('');
-      display.innerHTML = `Custom Select (${selectedFieldIds.length} field${selectedFieldIds.length > 1 ? 's' : ''})<br>${fieldsHtml}`;
-      display.classList.remove('empty');
-
-      // Add remove button listeners
-      display.querySelectorAll('.remove-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const fieldId = e.target.getAttribute('data-field-id');
-          selectedFieldIds = selectedFieldIds.filter(id => id !== fieldId);
-          saveSelectedFieldsToStorage();
-          updateSelectedFieldsDisplay();
-          updateAutoFillButtonState();
-          updateFieldModeUI(); // Update UI to show add button if no fields left
-        });
-      });
-    }
+// Handle field select click - enable field picker
+document.getElementById('fieldSelect').addEventListener('click', async () => {
+  // Always enable field picker when clicking on field select
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab) {
+    chrome.tabs.sendMessage(tab.id, { action: 'enableFieldPicker' }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error('Error enabling field picker:', chrome.runtime.lastError);
+        alert('Cannot enable field picker. Please refresh the page and try again.\n\nError: ' + chrome.runtime.lastError.message);
+      } else {
+        console.log('Field picker enabled successfully');
+      }
+    });
   }
-}
+});
 
 function updateAutoFillButtonState() {
   const autoFillBtn = document.getElementById('autoFill');
-  const hasMemories = selectedMemoryNames.length > 0;
+  const hasMemories = selectedMemoryIntents.length > 0;
+  const hasField = selectedFieldId !== null && selectedFieldId !== '';
 
-  if (fieldMode === 'all') {
-    // In 'all' mode, always enabled if memories are selected
-    autoFillBtn.disabled = !hasMemories;
-  } else {
-    // In 'custom' mode, need to have selected fields
-    const hasFields = selectedFieldIds.length > 0;
-    autoFillBtn.disabled = !(hasMemories && hasFields);
-  }
+  // Need both memories and a field selected
+  autoFillBtn.disabled = !(hasMemories && hasField);
 }
 
-// Auto fill with selected memory names and field IDs
+// Auto fill with selected memory intents and field ID
 document.getElementById('autoFill').addEventListener('click', async () => {
   const autoFillBtn = document.getElementById('autoFill');
 
-  // Determine which fields to fill based on mode
-  let fieldIdsToFill = [];
-  if (fieldMode === 'all') {
-    fieldIdsToFill = ALL_FIELDS;
-  } else {
-    if (selectedFieldIds.length === 0) {
-      return;
-    }
-    fieldIdsToFill = selectedFieldIds;
-  }
-
-  if (selectedMemoryNames.length === 0) {
+  if (!selectedFieldId) {
     return;
   }
+
+  if (selectedMemoryIntents.length === 0) {
+    return;
+  }
+
+  // Get page context from textarea
+  const pageContext = document.getElementById('pageContext').value.trim() || null;
 
   // Set loading state
   autoFillBtn.disabled = true;
   autoFillBtn.classList.add('loading');
-  autoFillBtn.textContent = '';
+  autoFillBtn.textContent = 'Filling...';
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  // Use selected memory intents
+  const memoryIntents = selectedMemoryIntents.length > 0 ? selectedMemoryIntents : null;
 
   // Send message and wait for response
   chrome.tabs.sendMessage(tab.id, {
     action: 'autofill',
-    memoryNames: selectedMemoryNames,
-    fieldIds: fieldIdsToFill
-  }, () => {
+    memoryIntents: memoryIntents,
+    fieldIds: [selectedFieldId],
+    userPrompt: null,
+    context: pageContext
+  }, (response) => {
     // Reset button state after completion
     autoFillBtn.disabled = false;
     autoFillBtn.classList.remove('loading');
     autoFillBtn.textContent = 'Auto Fill';
+
+    // Only show error for actual errors, not for "no match" (none case)
+    if (chrome.runtime.lastError) {
+      console.error('Error:', chrome.runtime.lastError);
+      alert('Error: ' + chrome.runtime.lastError.message);
+    } else if (response && !response.success && response.error) {
+      console.error('Autofill failed:', response.error);
+      alert('Autofill failed: ' + response.error);
+    }
   });
 });
 
-// Listen for field selection from content script (for real-time updates when popup is open)
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('Popup received message:', message);
+// Toggle memory section
+document.getElementById('toggleMemory').addEventListener('click', () => {
+  const memoryBox = document.getElementById('memoryFromHub');
+  const toggleIcon = document.getElementById('toggleMemory');
 
-  if (message.action === 'fieldSelected' && fieldMode === 'custom') {
+  if (memoryBox.style.display === 'none' || memoryBox.style.display === '') {
+    memoryBox.style.display = 'block';
+    toggleIcon.textContent = '▼';
+    toggleIcon.classList.remove('collapsed');
+  } else {
+    memoryBox.style.display = 'none';
+    toggleIcon.textContent = '▶';
+    toggleIcon.classList.add('collapsed');
+  }
+});
+
+// Listen for field selection from content script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'fieldSelected') {
     // Reload from storage to get the latest state
-    loadSelectedFieldsFromStorage().then(() => {
-      // Update UI to hide add button and picker mode indicator
-      updateFieldModeUI();
-    });
-    sendResponse({ success: true });
-    return true;
-  } else if (message.action === 'fieldPickerDisabled') {
-    // Hide picker mode indicator when field picker is disabled
-    document.getElementById('fieldPickerMode').style.display = 'none';
-    // Show add button if no fields selected
-    if (selectedFieldIds.length === 0) {
-      document.getElementById('addFieldBtn').style.display = 'flex';
-    }
+    loadSelectedFieldFromStorage();
     sendResponse({ success: true });
     return true;
   }
-
   return false;
 });
 
 // Listen for storage changes to update UI in real-time
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === 'local' && changes.selectedFieldIds && fieldMode === 'custom') {
-    selectedFieldIds = changes.selectedFieldIds.newValue || [];
-    updateSelectedFieldsDisplay();
+  if (areaName === 'local' && changes.selectedFieldId) {
+    selectedFieldId = changes.selectedFieldId.newValue || null;
+    updateFieldSelectDisplay();
     updateAutoFillButtonState();
-    updateFieldModeUI(); // Update UI to show/hide add button
   }
 });
 
@@ -245,6 +226,6 @@ document.getElementById('manageMemories').addEventListener('click', () => {
 });
 
 // Initialize on popup open
-loadSelectedFieldsFromStorage();
-updateSelectedMemoryNames(); // Initialize memory names from checkboxes
+loadSelectedFieldFromStorage();
+loadMemoriesFromBackend(); // Load memories from backend
 updateAutoFillButtonState();

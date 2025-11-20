@@ -2,299 +2,17 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <style>
-    body {
-      width: 300px;
-      padding: 20px;
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #fafafa;
-    }
-
-    h1 {
-      margin: 0 0 20px 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-      text-align: center;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 10px;
-      background: #fff;
-      color: #333;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 13px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-
-    button:hover {
-      background: #f5f5f5;
-      border-color: #999;
-    }
-
-    button#autoFill {
-      background: #000;
-      color: #fff;
-      border-color: #000;
-    }
-
-    button#autoFill:hover {
-      background: #333;
-    }
-
-    button#autoFill:disabled {
-      background: #999;
-      cursor: not-allowed;
-    }
-
-    button#autoFill.loading {
-      position: relative;
-    }
-
-    button#autoFill.loading::before {
-      content: "Auto Fill";
-      visibility: hidden;
-    }
-
-    button#autoFill.loading::after {
-      content: "";
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      top: 50%;
-      left: 50%;
-      margin: -5px 0 0 -5px;
-      border: 2px solid #fff;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .section-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .edit-icon {
-      font-size: 13px;
-      cursor: pointer;
-      padding: 4px 8px;
-      color: #666;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      text-decoration: none;
-      user-select: none;
-      transition: all 0.2s;
-    }
-
-    .edit-icon:hover {
-      color: #333;
-      background: #f5f5f5;
-      border-color: #999;
-    }
-
-    .memory-box {
-      margin-bottom: 25px;
-      padding: 12px;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-
-    .memory-option {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .memory-option:last-child {
-      margin-bottom: 0;
-    }
-
-    .memory-option input[type="checkbox"] {
-      cursor: pointer;
-    }
-
-    .memory-option label {
-      cursor: pointer;
-      font-size: 13px;
-      color: #333;
-    }
-
-    .memory-input-field {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 13px;
-      font-family: inherit;
-      resize: vertical;
-      min-height: 60px;
-      box-sizing: border-box;
-      margin-bottom: 25px;
-    }
-
-    .memory-input-field:focus {
-      outline: none;
-      border-color: #999;
-    }
-
-    #fieldSelection {
-      margin-bottom: 10px;
-      padding: 12px;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-
-    .field-mode-selector {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .field-mode-selector button {
-      flex: 1;
-      padding: 8px 12px;
-      margin-bottom: 0;
-      font-size: 12px;
-      background: #f5f5f5;
-      border: 1px solid #ddd;
-    }
-
-    .field-mode-selector button.active {
-      background: #000;
-      color: #fff;
-      border-color: #000;
-    }
-
-    .field-picker-mode {
-      padding: 10px;
-      background: #fff3cd;
-      border: 1px solid #ffc107;
-      border-radius: 4px;
-      font-size: 12px;
-      color: #856404;
-      text-align: center;
-      margin-top: 10px;
-    }
-
-    .add-field-btn {
-      width: 100%;
-      padding: 8px;
-      margin-top: 10px;
-      background: #2196F3;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      font-size: 14px;
-      cursor: pointer;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-
-    .add-field-btn:hover {
-      background: #1976D2;
-    }
-
-    .add-field-btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-
-    #selectedFields {
-      margin-top: 10px;
-      margin-bottom: 25px;
-      padding: 10px;
-      background: #f5f5f5;
-      border-radius: 4px;
-      font-size: 12px;
-      color: #666;
-      min-height: 20px;
-    }
-
-    #selectedFields.empty {
-      color: #999;
-    }
-
-    .selected-field-item {
-      display: inline-block;
-      margin: 4px 4px 4px 0;
-      padding: 4px 8px;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      font-size: 11px;
-      position: relative;
-    }
-
-    .selected-field-item .remove-btn {
-      margin-left: 6px;
-      cursor: pointer;
-      color: #ff4444;
-      font-weight: bold;
-    }
-  </style>
+  <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <h1>Formless</h1>
 
   <div class="section-title">
-    <span>Fields:</span>
+    <span>Field:</span>
   </div>
 
-  <div id="fieldSelection">
-    <div class="field-mode-selector">
-      <button id="modeAllFields" class="active">All Fields</button>
-      <button id="modeCustomFields">Custom Select</button>
-    </div>
-
-    <div id="fieldPickerMode" class="field-picker-mode" style="display: none;">
-      Click on form fields in the webpage to select them
-    </div>
-
-    <button id="addFieldBtn" class="add-field-btn" style="display: none;">
-      <span>+</span>
-      <span>Add Field</span>
-    </button>
-  </div>
-
-  <div id="selectedFields">All Fields (3 fields: full_name, email, why_join)</div>
-
-  <div class="section-title">
-    <span>Memory:</span>
-    <span id="manageMemories" class="edit-icon">✎</span>
-  </div>
-
-  <div class="memory-box" id="memoryFromHub">
-    <div class="memory-option">
-      <input type="checkbox" id="basic_info" value="basic_info" checked>
-      <label for="basic_info">basic_info</label>
-    </div>
-    <div class="memory-option">
-      <input type="checkbox" id="why_join" value="why_join" checked>
-      <label for="why_join">why_join</label>
-    </div>
+  <div id="fieldSelect" class="field-select empty">
+    Select a field...
   </div>
 
   <div class="section-title">
@@ -303,8 +21,20 @@
 
   <textarea id="pageContext" class="memory-input-field" placeholder="Paste content here..."></textarea>
 
+  <div class="section-title">
+    <span>Memory:</span>
+    <span id="manageMemories" class="edit-icon">✎</span>
+    <span id="toggleMemory" class="toggle-icon collapsed">▶</span>
+  </div>
+
+  <div class="memory-box" id="memoryFromHub" style="display: none;">
+    <!-- Memory checkboxes will be dynamically loaded from backend -->
+    <div style="color: #999; font-size: 12px; padding: 10px;">Loading memories...</div>
+  </div>
+
   <button id="autoFill">Auto Fill</button>
 
+  <script src="api.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
