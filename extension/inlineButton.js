@@ -1,38 +1,92 @@
 // Track all injected buttons and their associated fields
 const inlineButtons = new Map();
-let isInitialized = false;
+let inlineButtonsEnabled = false;
 
 // Debounce timer for resize/scroll events
 let repositionTimer = null;
 
-/**
- * Initialize inline buttons on page load
- */
-function initializeInlineButtons() {
-  if (isInitialized) return;
-  isInitialized = true;
+// DOM observer for dynamic fields
+let domObserver = null;
 
-  console.log('[Formless] Initializing inline buttons...');
+// Scroll and resize listeners
+let scrollListener = null;
+let resizeListener = null;
+
+/**
+ * Enable inline buttons
+ */
+function enableInlineButtons() {
+  if (inlineButtonsEnabled) return;
+  inlineButtonsEnabled = true;
+
+  console.log('[Formless] Enabling inline buttons...');
 
   // Scan and inject buttons after a short delay to ensure DOM is ready
   setTimeout(() => {
     scanAndInjectButtons();
-  }, 500);
+  }, 100);
 
   // Monitor DOM changes for dynamically added fields
   observeDOMChanges();
 
   // Update button positions on scroll and resize
-  window.addEventListener('scroll', debounceRepositionButtons, true);
-  window.addEventListener('resize', debounceRepositionButtons);
+  scrollListener = debounceRepositionButtons;
+  resizeListener = debounceRepositionButtons;
+  window.addEventListener('scroll', scrollListener, true);
+  window.addEventListener('resize', resizeListener);
 
-  console.log('[Formless] Inline buttons initialized');
+  console.log('[Formless] Inline buttons enabled');
+}
+
+/**
+ * Disable inline buttons
+ */
+function disableInlineButtons() {
+  if (!inlineButtonsEnabled) return;
+  inlineButtonsEnabled = false;
+
+  console.log('[Formless] Disabling inline buttons...');
+
+  // Remove all buttons
+  removeAllButtons();
+
+  // Stop observing DOM changes
+  if (domObserver) {
+    domObserver.disconnect();
+    domObserver = null;
+  }
+
+  // Remove scroll and resize listeners
+  if (scrollListener) {
+    window.removeEventListener('scroll', scrollListener, true);
+    scrollListener = null;
+  }
+  if (resizeListener) {
+    window.removeEventListener('resize', resizeListener);
+    resizeListener = null;
+  }
+
+  console.log('[Formless] Inline buttons disabled');
+}
+
+/**
+ * Remove all injected buttons
+ */
+function removeAllButtons() {
+  inlineButtons.forEach(({ button }) => {
+    if (button && button.parentNode) {
+      button.remove();
+    }
+  });
+  inlineButtons.clear();
 }
 
 /**
  * Scan page for input fields and inject buttons
  */
 function scanAndInjectButtons() {
+  if (!inlineButtonsEnabled) return; // Don't scan if disabled
+
   const fields = document.querySelectorAll(
     'input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="url"], textarea, select'
   );
@@ -151,7 +205,11 @@ function observeFieldVisibility(field, button) {
  * Observe DOM changes for dynamically added fields
  */
 function observeDOMChanges() {
-  const observer = new MutationObserver((mutations) => {
+  if (domObserver) return; // Already observing
+
+  domObserver = new MutationObserver((mutations) => {
+    if (!inlineButtonsEnabled) return; // Don't process if disabled
+
     let shouldRescan = false;
 
     mutations.forEach(mutation => {
@@ -173,7 +231,7 @@ function observeDOMChanges() {
         if (node.nodeType === 1 && node.id) {
           // Remove button if field was removed
           const buttonData = inlineButtons.get(node.id);
-          if (buttonData) {
+          if (buttonData && buttonData.button) {
             buttonData.button.remove();
             inlineButtons.delete(node.id);
           }
@@ -186,7 +244,7 @@ function observeDOMChanges() {
     }
   });
 
-  observer.observe(document.body, {
+  domObserver.observe(document.body, {
     childList: true,
     subtree: true
   });
@@ -221,12 +279,37 @@ function getButtonPosition(fieldId) {
   };
 }
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeInlineButtons);
-} else {
-  initializeInlineButtons();
-}
+/**
+ * Listen for messages from popup to enable/disable inline buttons
+ */
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'enableInlineMode') {
+    enableInlineButtons();
+    sendResponse({ success: true });
+    return true;
+  } else if (message.action === 'disableInlineMode') {
+    disableInlineButtons();
+    sendResponse({ success: true });
+    return true;
+  }
+  return false;
+});
+
+/**
+ * Check stored mode on page load and enable if needed
+ */
+chrome.storage.local.get(['formlessMode'], (result) => {
+  const mode = result.formlessMode || 'page'; // Default to page
+  if (mode === 'inline') {
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', enableInlineButtons);
+    } else {
+      enableInlineButtons();
+    }
+  }
+  // Default page mode - don't enable buttons automatically
+});
 
 // Export for use by popup UI
 window.formlessGetButtonPosition = getButtonPosition;

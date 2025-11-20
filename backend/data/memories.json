@@ -15,7 +15,7 @@
     {
       "id": "550e8400-e29b-41d4-a716-446655440002",
       "intent": "why join company",
-      "value": "1. I'm motivated by bringing AI into real workflows to create business value, and {company name}'s mission aligns well with the kind of work I want to do. 2. I enjoy hands-on coding and have built AI-powered products in a startup setting—from 0→1 to performance tuning—and this is the type of technical work I have experience with and want to go deeper into. 3. {company_name} has an energetic team with high tech bars, I can learn a lot and grow rapidly here",
+      "value": "Write a concise and natural “Why this company” answer.\nIntegrate these ideas organically in 3 sentences, without listing them or following a fixed structure:\n\nI like working on real AI applications that create practical value.\nI enjoy hands-on building and fast iteration.\nI’m looking for a strong engineering environment where I can learn quickly.",
       "type": "prompt"
     }
   ]
