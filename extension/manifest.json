@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Formless Autofill",
-  "version": "0.1",
+  "version": "0.2",
   "description": "Demo: AI-powered form autofill",
   "permissions": ["activeTab", "scripting", "storage"],
   "action": {
@@ -10,7 +10,14 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["api.js", "fieldPicker.js", "fill.js"]
+      "js": ["api.js", "fieldPicker.js", "fill.js", "inlineButton.js", "inlinePopupUI.js"],
+      "css": ["inlinePopup.css"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["inlinePopup.css"],
+      "matches": ["<all_urls>"]
     }
   ]
 }

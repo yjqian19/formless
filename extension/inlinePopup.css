@@ -1,0 +1,257 @@
+/* Inline button styles */
+.formless-inline-button {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: #000;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 9998;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  transition: all 0.2s;
+}
+
+.formless-inline-button:hover {
+  background: #333;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.formless-inline-button::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Backdrop overlay */
+.formless-inline-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 9998;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Inline popup container */
+.formless-inline-popup {
+  position: fixed;
+  width: 300px;
+  background: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  animation: slideIn 0.2s ease-out;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.formless-inline-popup h1 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+.formless-inline-popup .section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.formless-inline-popup .field-display {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  background: #f5f5f5;
+  color: #666;
+  margin-bottom: 25px;
+  box-sizing: border-box;
+  font-family: monospace;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.formless-inline-popup textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+  box-sizing: border-box;
+  margin-bottom: 20px;
+  background: #fff;
+}
+
+.formless-inline-popup textarea:focus {
+  outline: none;
+  border-color: #999;
+}
+
+.formless-inline-popup .memory-mode-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.formless-inline-popup .memory-mode-selector button {
+  flex: 1;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 12px;
+  background: #fff;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.formless-inline-popup .memory-mode-selector button.active {
+  background: #fff;
+  color: #333;
+  border-color: #000;
+  font-weight: 600;
+}
+
+.formless-inline-popup .memory-box {
+  margin-bottom: 20px;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.formless-inline-popup .memory-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  margin-bottom: 0;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+
+.formless-inline-popup .memory-option:hover {
+  background: #f8f8f8;
+}
+
+.formless-inline-popup .memory-option input[type="checkbox"] {
+  cursor: pointer;
+  margin: 0;
+}
+
+.formless-inline-popup .memory-option span {
+  font-size: 13px;
+  color: #333;
+  user-select: none;
+}
+
+.formless-inline-popup .button-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.formless-inline-popup button {
+  flex: 1;
+  padding: 12px;
+  background: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.formless-inline-popup button:hover {
+  background: #f5f5f5;
+  border-color: #999;
+}
+
+.formless-inline-popup button.primary {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+.formless-inline-popup button.primary:hover {
+  background: #333;
+}
+
+.formless-inline-popup button.primary:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
+.formless-inline-popup button.primary.loading {
+  position: relative;
+}
+
+.formless-inline-popup button.primary.loading::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  top: 50%;
+  left: 50%;
+  margin: -5px 0 0 -5px;
+  border: 2px solid #fff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Hide button on popup's own input fields */
+.formless-inline-popup input.formless-inline-button,
+.formless-inline-popup textarea.formless-inline-button {
+  display: none !important;
+}
