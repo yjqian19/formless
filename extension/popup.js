@@ -7,6 +7,9 @@ let availableMemories = [];
 // Store selected field ID (single field only)
 let selectedFieldId = null;
 
+// Memory mode: 'all' or 'custom'
+let memoryMode = 'all';
+
 /**
  * Load memories from backend and display them
  */
@@ -41,30 +44,34 @@ function renderMemoryCheckboxes() {
   // Create checkboxes for each memory item (display intent)
   availableMemories.forEach(memory => {
     const label = document.createElement('label');
-    label.style.cssText = 'display: flex; align-items: center; padding: 8px; cursor: pointer;';
-    label.style.marginBottom = '4px';
+    label.className = 'memory-option';
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.value = memory.intent;
-    checkbox.style.marginRight = '8px';
     checkbox.addEventListener('change', updateSelectedMemoryIntents);
 
     const span = document.createElement('span');
     span.textContent = memory.intent;
-    span.style.fontSize = '13px';
-    span.style.color = '#333';
 
     label.appendChild(checkbox);
     label.appendChild(span);
     memoryBox.appendChild(label);
   });
 
-  // Default: select all memories
-  selectedMemoryIntents = availableMemories.map(m => m.intent);
-  document.querySelectorAll('#memoryFromHub input[type="checkbox"]').forEach(checkbox => {
-    checkbox.checked = true;
-  });
+  // If custom mode, restore previously selected intents
+  if (memoryMode === 'custom') {
+    // Restore selections from selectedMemoryIntents
+    document.querySelectorAll('#memoryFromHub input[type="checkbox"]').forEach(checkbox => {
+      checkbox.checked = selectedMemoryIntents.includes(checkbox.value);
+    });
+  } else {
+    // All mode: select all
+    selectedMemoryIntents = availableMemories.map(m => m.intent);
+    document.querySelectorAll('#memoryFromHub input[type="checkbox"]').forEach(checkbox => {
+      checkbox.checked = true;
+    });
+  }
 
   updateAutoFillButtonState();
 }
@@ -183,21 +190,39 @@ document.getElementById('autoFill').addEventListener('click', async () => {
   });
 });
 
-// Toggle memory section
-document.getElementById('toggleMemory').addEventListener('click', () => {
-  const memoryBox = document.getElementById('memoryFromHub');
-  const toggleIcon = document.getElementById('toggleMemory');
-
-  if (memoryBox.style.display === 'none' || memoryBox.style.display === '') {
-    memoryBox.style.display = 'block';
-    toggleIcon.textContent = '▼';
-    toggleIcon.classList.remove('collapsed');
-  } else {
-    memoryBox.style.display = 'none';
-    toggleIcon.textContent = '▶';
-    toggleIcon.classList.add('collapsed');
-  }
+// Memory mode toggle
+document.getElementById('modeAllMemories').addEventListener('click', () => {
+  memoryMode = 'all';
+  updateMemoryModeUI();
 });
+
+document.getElementById('modeCustomMemories').addEventListener('click', () => {
+  memoryMode = 'custom';
+  updateMemoryModeUI();
+});
+
+function updateMemoryModeUI() {
+  const allBtn = document.getElementById('modeAllMemories');
+  const customBtn = document.getElementById('modeCustomMemories');
+  const memoryBox = document.getElementById('memoryFromHub');
+
+  if (memoryMode === 'all') {
+    allBtn.classList.add('active');
+    customBtn.classList.remove('active');
+    memoryBox.style.display = 'none';
+
+    // Select all memories
+    selectedMemoryIntents = availableMemories.map(m => m.intent);
+  } else {
+    allBtn.classList.remove('active');
+    customBtn.classList.add('active');
+    memoryBox.style.display = 'block';
+
+    // Keep current selections
+  }
+
+  updateAutoFillButtonState();
+}
 
 // Listen for field selection from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -227,5 +252,7 @@ document.getElementById('manageMemories').addEventListener('click', () => {
 
 // Initialize on popup open
 loadSelectedFieldFromStorage();
-loadMemoriesFromBackend(); // Load memories from backend
+loadMemoriesFromBackend().then(() => {
+  updateMemoryModeUI(); // Set initial memory mode UI
+});
 updateAutoFillButtonState();

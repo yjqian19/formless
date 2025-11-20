@@ -30,6 +30,12 @@ async def match_form_fields(request: MatchingRequest):
     2. Search for matching intent (search_intent)
     3. Compose final value from match result and optional inputs (compose_value)
     """
+    # Print request details for debugging
+    print("=" * 50)
+    print("Received matching request:")
+    print(json.dumps(request.model_dump(), indent=2, ensure_ascii=False))
+    print("=" * 50)
+
     # Get memory items by their intents (None means all items)
     if not request.memory_intents:
         memory_items = storage.get_all_items()

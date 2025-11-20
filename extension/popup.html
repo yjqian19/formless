@@ -8,7 +8,7 @@
   <h1>Formless</h1>
 
   <div class="section-title">
-    <span>Field:</span>
+    <span>Field</span>
   </div>
 
   <div id="fieldSelect" class="field-select empty">
@@ -16,15 +16,19 @@
   </div>
 
   <div class="section-title">
-    <span>Page Context:</span>
+    <span>Page Context</span>
   </div>
 
   <textarea id="pageContext" class="memory-input-field" placeholder="Paste content here..."></textarea>
 
   <div class="section-title">
-    <span>Memory:</span>
-    <span id="manageMemories" class="edit-icon">✎</span>
-    <span id="toggleMemory" class="toggle-icon collapsed">▶</span>
+    <span>Memory</span>
+    <span id="manageMemories" class="action-icon" title="Manage memories">↗</span>
+  </div>
+
+  <div class="memory-mode-selector">
+    <button id="modeAllMemories" class="active">All</button>
+    <button id="modeCustomMemories">Custom</button>
   </div>
 
   <div class="memory-box" id="memoryFromHub" style="display: none;">

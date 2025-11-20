@@ -76,55 +76,52 @@ button#autoFill.loading::after {
 }
 
 .section-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #333;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.edit-icon {
-  font-size: 13px;
+.action-icon {
+  font-size: 16px;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 2px 4px;
   color: #666;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 3px;
-  text-decoration: none;
   user-select: none;
-  transition: all 0.2s;
+  transition: all 0.15s;
+  border-radius: 3px;
+  line-height: 1;
 }
 
-.edit-icon:hover {
+.action-icon:hover {
   color: #333;
-  background: #f5f5f5;
-  border-color: #999;
+  background: #f0f0f0;
 }
 
-.toggle-icon {
-  font-size: 13px;
-  cursor: pointer;
-  padding: 4px 8px;
+.memory-mode-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 30px;
+}
+
+.memory-mode-selector button {
+  flex: 1;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 12px;
+  background: #fff;
   color: #666;
-  background: #fff;
   border: 1px solid #ddd;
-  border-radius: 3px;
-  text-decoration: none;
-  user-select: none;
-  transition: all 0.2s;
 }
 
-.toggle-icon:hover {
+.memory-mode-selector button.active {
+  background: #fff;
   color: #333;
-  background: #f5f5f5;
-  border-color: #999;
-}
-
-.toggle-icon.collapsed {
-  transform: rotate(-90deg);
+  border-color: #000;
+  font-weight: 600;
 }
 
 .field-select {
@@ -153,8 +150,8 @@ button#autoFill.loading::after {
 }
 
 .memory-box {
-  margin-bottom: 25px;
-  padding: 12px;
+  margin-bottom: 30px;
+  padding: 8px;
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -164,21 +161,26 @@ button#autoFill.loading::after {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  padding: 6px 4px;
+  margin-bottom: 0;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.15s;
 }
 
-.memory-option:last-child {
-  margin-bottom: 0;
+.memory-option:hover {
+  background: #f8f8f8;
 }
 
 .memory-option input[type="checkbox"] {
   cursor: pointer;
+  margin: 0;
 }
 
-.memory-option label {
-  cursor: pointer;
+.memory-option span {
   font-size: 13px;
   color: #333;
+  user-select: none;
 }
 
 .memory-input-field {
@@ -189,9 +191,9 @@ button#autoFill.loading::after {
   font-size: 13px;
   font-family: inherit;
   resize: vertical;
-  min-height: 60px;
+  min-height: 80px;
   box-sizing: border-box;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
 }
 
 .memory-input-field:focus {
