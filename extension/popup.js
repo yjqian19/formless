@@ -246,7 +246,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 
 // Open Memory Hub page
 document.getElementById('manageMemories').addEventListener('click', () => {
-  const memoryHubPath = 'file:///Volumes/yjbolt/projects/formless/memory-hub.html';
+  const memoryHubPath = 'file:///Volumes/yjbolt/projects/formless/frontend/memory-hub.html';
   chrome.tabs.create({ url: memoryHubPath });
 });
 

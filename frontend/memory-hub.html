@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Hub - Formless</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #333;
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 30px;
+    }
+
+    .header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .add-button {
+      display: inline-block;
+      padding: 10px 16px;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .add-button:hover {
+      background: #333;
+    }
+
+    .add-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .error {
+      background: #fee;
+      border: 1px solid #fcc;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 20px;
+      color: #c33;
+      font-size: 13px;
+    }
+
+    .memory-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .memory-item {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 20px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+
+    .memory-item:hover {
+      border-color: #999;
+    }
+
+    .memory-item.editing {
+      border-color: #000;
+    }
+
+    .edit-button, .delete-button {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      padding: 6px 12px;
+      background: #fff;
+      color: #333;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: 500;
+      margin-left: 8px;
+    }
+
+    .delete-button {
+      right: 80px;
+      color: #c33;
+      border-color: #fcc;
+    }
+
+    .delete-button:hover {
+      background: #fee;
+      border-color: #c33;
+    }
+
+    .edit-button:hover {
+      background: #f5f5f5;
+      border-color: #999;
+    }
+
+    .memory-item.editing .edit-button,
+    .memory-item.editing .delete-button {
+      display: none;
+    }
+
+    .memory-field {
+      display: flex;
+      margin-bottom: 12px;
+    }
+
+    .memory-field:last-child {
+      margin-bottom: 0;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #666;
+      width: 80px;
+      flex-shrink: 0;
+      padding-top: 4px;
+    }
+
+    .field-value {
+      font-size: 13px;
+      color: #333;
+      flex: 1;
+      word-break: break-word;
+      padding-top: 2px;
+    }
+
+    .memory-item.editing .field-value {
+      display: none;
+    }
+
+    .memory-item input[type="text"],
+    .memory-item textarea,
+    .memory-item select {
+      display: none;
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #999;
+      border-radius: 3px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    .memory-item.editing input[type="text"],
+    .memory-item.editing textarea,
+    .memory-item.editing select {
+      display: block;
+    }
+
+    .memory-item textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .type-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      background: #000;
+      color: #fff;
+      font-size: 11px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+
+    .action-buttons {
+      display: none;
+      gap: 8px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .memory-item.editing .action-buttons {
+      display: flex;
+    }
+
+    .save-button, .cancel-button {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .save-button {
+      background: #000;
+      color: #fff;
+      border-color: #000;
+    }
+
+    .save-button:hover {
+      background: #333;
+    }
+
+    .save-button:disabled {
+      background: #ccc;
+      border-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .cancel-button {
+      background: #fff;
+      color: #333;
+    }
+
+    .cancel-button:hover {
+      background: #f5f5f5;
+      border-color: #999;
+    }
+
+    .new-memory-form {
+      display: none;
+      background: white;
+      border: 2px solid #000;
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .new-memory-form.active {
+      display: block;
+    }
+
+    .new-memory-form h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+      font-size: 14px;
+    }
+
+    .empty-state h2 {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Memory Hub</h1>
+
+    <div id="error-message" class="error" style="display: none;"></div>
+
+    <div class="header-actions">
+      <div></div>
+      <button id="add-button" class="add-button" onclick="toggleNewMemoryForm()">+ Add New Memory</button>
+    </div>
+
+    <!-- New Memory Form -->
+    <div id="new-memory-form" class="new-memory-form">
+      <h2>Create New Memory</h2>
+      <div class="memory-field">
+        <div class="field-label">Intent:</div>
+        <input type="text" id="new-intent" placeholder="e.g., linkedin profile" />
+      </div>
+      <div class="memory-field">
+        <div class="field-label">Value:</div>
+        <textarea id="new-value" placeholder="Enter value or prompt..."></textarea>
+      </div>
+      <div class="memory-field">
+        <div class="field-label">Type:</div>
+        <select id="new-type">
+          <option value="text">text</option>
+          <option value="prompt">prompt</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="save-button" onclick="createMemory()">Create</button>
+        <button class="cancel-button" onclick="toggleNewMemoryForm()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="loading">Loading memories...</div>
+
+    <!-- Memory List -->
+    <div id="memory-list" class="memory-list" style="display: none;"></div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="empty-state" style="display: none;">
+      <h2>No memories yet</h2>
+      <p>Click "Add New Memory" to create your first memory item.</p>
+    </div>
+  </div>
+
+  <script>
+    // API Configuration
+    const API_BASE_URL = 'http://localhost:8000/api/memories';
+
+    // State
+    let memories = [];
+    let editingItemId = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadMemories();
+    });
+
+    // API Functions
+    async function loadMemories() {
+      try {
+        showLoading(true);
+        hideError();
+
+        const response = await fetch(API_BASE_URL);
+
+        if (!response.ok) {
+          throw new Error(`Failed to load memories: ${response.status} ${response.statusText}`);
+        }
+
+        memories = await response.json();
+        renderMemories();
+        showLoading(false);
+      } catch (error) {
+        console.error('Error loading memories:', error);
+        showError(`Failed to load memories. Make sure the backend is running at ${API_BASE_URL}`);
+        showLoading(false);
+      }
+    }
+
+    async function createMemory() {
+      const intent = document.getElementById('new-intent').value.trim();
+      const value = document.getElementById('new-value').value.trim();
+      const type = document.getElementById('new-type').value;
+
+      if (!intent || !value) {
+        showError('Intent and Value are required.');
+        return;
+      }
+
+      try {
+        showError('');
+        const saveButton = event.target;
+        saveButton.disabled = true;
+        saveButton.textContent = 'Creating...';
+
+        const response = await fetch(API_BASE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ intent, value, type }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `Failed to create memory: ${response.status}`);
+        }
+
+        const newMemory = await response.json();
+        memories.push(newMemory);
+        renderMemories();
+        toggleNewMemoryForm();
+        clearNewMemoryForm();
+
+        saveButton.disabled = false;
+        saveButton.textContent = 'Create';
+      } catch (error) {
+        console.error('Error creating memory:', error);
+        showError(`Failed to create memory: ${error.message}`);
+        event.target.disabled = false;
+        event.target.textContent = 'Create';
+      }
+    }
+
+    async function updateMemory(itemId) {
+      const item = document.querySelector(`[data-memory-id="${itemId}"]`);
+      const intentInput = item.querySelector('.intent-input');
+      const valueInput = item.querySelector('.value-input');
+      const typeInput = item.querySelector('.type-input');
+
+      const intent = intentInput.value.trim();
+      const value = valueInput.value.trim();
+      const type = typeInput.value;
+
+      if (!intent || !value) {
+        showError('Intent and Value are required.');
+        return;
+      }
+
+      try {
+        showError('');
+        const saveButton = item.querySelector('.save-button');
+        saveButton.disabled = true;
+        saveButton.textContent = 'Saving...';
+
+        const response = await fetch(`${API_BASE_URL}/${itemId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ intent, value, type }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `Failed to update memory: ${response.status}`);
+        }
+
+        const updatedMemory = await response.json();
+        const index = memories.findIndex(m => m.id === itemId);
+        if (index !== -1) {
+          memories[index] = updatedMemory;
+        }
+        renderMemories();
+
+        saveButton.disabled = false;
+        saveButton.textContent = 'Save';
+      } catch (error) {
+        console.error('Error updating memory:', error);
+        showError(`Failed to update memory: ${error.message}`);
+        const saveButton = item.querySelector('.save-button');
+        saveButton.disabled = false;
+        saveButton.textContent = 'Save';
+      }
+    }
+
+    async function deleteMemory(itemId) {
+      if (!confirm('Are you sure you want to delete this memory?')) {
+        return;
+      }
+
+      try {
+        showError('');
+
+        const response = await fetch(`${API_BASE_URL}/${itemId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || `Failed to delete memory: ${response.status}`);
+        }
+
+        memories = memories.filter(m => m.id !== itemId);
+        renderMemories();
+      } catch (error) {
+        console.error('Error deleting memory:', error);
+        showError(`Failed to delete memory: ${error.message}`);
+      }
+    }
+
+    // UI Functions
+    function renderMemories() {
+      const listContainer = document.getElementById('memory-list');
+      const emptyState = document.getElementById('empty-state');
+      const addButton = document.getElementById('add-button');
+
+      if (memories.length === 0) {
+        listContainer.style.display = 'none';
+        emptyState.style.display = 'block';
+        addButton.disabled = false;
+        return;
+      }
+
+      listContainer.style.display = 'flex';
+      emptyState.style.display = 'none';
+      addButton.disabled = false;
+
+      listContainer.innerHTML = memories.map(memory => `
+        <div class="memory-item" data-memory-id="${memory.id}">
+          <button class="edit-button" onclick="editMemory('${memory.id}')">Edit</button>
+          <button class="delete-button" onclick="deleteMemory('${memory.id}')">Delete</button>
+
+          <div class="memory-field">
+            <div class="field-label">Intent:</div>
+            <div class="field-value">${escapeHtml(memory.intent)}</div>
+            <input type="text" class="intent-input" value="${escapeHtml(memory.intent)}" />
+          </div>
+
+          <div class="memory-field">
+            <div class="field-label">Value:</div>
+            <div class="field-value">${escapeHtml(memory.value)}</div>
+            <textarea class="value-input">${escapeHtml(memory.value)}</textarea>
+          </div>
+
+          <div class="memory-field">
+            <div class="field-label">Type:</div>
+            <div class="field-value">
+              <span class="type-badge">${escapeHtml(memory.type)}</span>
+            </div>
+            <select class="type-input">
+              <option value="text" ${memory.type === 'text' ? 'selected' : ''}>text</option>
+              <option value="prompt" ${memory.type === 'prompt' ? 'selected' : ''}>prompt</option>
+            </select>
+          </div>
+
+          <div class="action-buttons">
+            <button class="save-button" onclick="updateMemory('${memory.id}')">Save</button>
+            <button class="cancel-button" onclick="cancelEdit('${memory.id}')">Cancel</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function editMemory(itemId) {
+      editingItemId = itemId;
+      const item = document.querySelector(`[data-memory-id="${itemId}"]`);
+      item.classList.add('editing');
+    }
+
+    function cancelEdit(itemId) {
+      editingItemId = null;
+      const item = document.querySelector(`[data-memory-id="${itemId}"]`);
+      item.classList.remove('editing');
+
+      // Reset inputs to original values
+      const memory = memories.find(m => m.id === itemId);
+      if (memory) {
+        const intentInput = item.querySelector('.intent-input');
+        const valueInput = item.querySelector('.value-input');
+        const typeInput = item.querySelector('.type-input');
+
+        intentInput.value = memory.intent;
+        valueInput.value = memory.value;
+        typeInput.value = memory.type;
+      }
+    }
+
+    function toggleNewMemoryForm() {
+      const form = document.getElementById('new-memory-form');
+      const isActive = form.classList.contains('active');
+
+      if (isActive) {
+        form.classList.remove('active');
+        clearNewMemoryForm();
+      } else {
+        form.classList.add('active');
+        document.getElementById('new-intent').focus();
+      }
+    }
+
+    function clearNewMemoryForm() {
+      document.getElementById('new-intent').value = '';
+      document.getElementById('new-value').value = '';
+      document.getElementById('new-type').value = 'text';
+    }
+
+    function showLoading(show) {
+      document.getElementById('loading').style.display = show ? 'block' : 'none';
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error-message');
+      if (message) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+      } else {
+        errorDiv.style.display = 'none';
+      }
+    }
+
+    function hideError() {
+      showError('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
