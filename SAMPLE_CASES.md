@@ -1,5 +1,9 @@
 # Sample Use Cases
 
+- Job Application Forms (ashbyhq)
+- Event Registration Forms (Google Forms)
+- Later: Online Exam (Google Forms)
+
 ## Core
 
 **Simple Fill**
@@ -51,8 +55,10 @@
     - metadata: { "course": "Art History 201", "topic": "Impressionism" }
     - intent: null (used for retrieval matching, not direct fill)
 
-**Supoort Platform**
-- Customed Page
+## Supoort Platform
+- Customed Fill-in Page
+- Google Forms
+- https://jobs.ashbyhq.com/baseten/fc6e5f2e-eb2d-4a6c-8a51-8422e8662bde/application
 
 ## Next Steps
 - What's your nearest availabity for interview? / Why do you want to work here in Notion?
@@ -63,8 +69,8 @@
 
 **Support Platform**
 - Google Forms
-- Job application (ashbyhq / greenhouse)
+- Job application (greenhouse)
 - Canvas
-- https://jobs.ashbyhq.com/baseten/fc6e5f2e-eb2d-4a6c-8a51-8422e8662bde/application
+
 
 **Support Page Level Fill**
