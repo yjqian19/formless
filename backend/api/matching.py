@@ -216,7 +216,7 @@ async def compose_value(
     Args:
         matched_item: Memory item from search_intent (can be None)
         user_prompt: User-provided prompt/outline (highest priority)
-        context: Short-term context (e.g., company introduction, page content)
+        context: Short-term context provided by the form creator (e.g., company introduction, event details, form instructions, page content). This is written by whoever created the form, not by the user filling it out.
 
     Returns:
         Final value string, or None if cannot resolve
@@ -272,7 +272,7 @@ async def generate_content(
 
     Args:
         user_prompt: User-provided prompt/outline (highest priority)
-        context: Short-term context (e.g., company introduction, page content)
+        context: Short-term context provided by the form creator (e.g., company introduction, event details, form instructions, page content). This is written by whoever created the form, not by the user filling it out.
         memory_item_value: Memory item value (template or prompt instruction, lowest priority)
 
     Returns:
@@ -284,46 +284,34 @@ async def generate_content(
             detail="OpenAI API key not configured. Please set OPENAI_API_KEY environment variable."
         )
 
-    # Build the generation prompt with priority: user_prompt > context > memory_item_value
-    messages_content = ""
+    # Build the generation prompt progressively with clear priority order
+    sections = []
 
+    # Add priority header if we have multiple inputs
+    if user_prompt or (context and memory_item_value):
+        sections.append("Priority: User's outline (primary) > Form context (secondary) > Memory template (supplementary)")
+
+    # Primary: User's outline
     if user_prompt:
-        # user_prompt is highest priority - use as primary input
-        messages_content = f"""Based on the following outline/framework, generate a complete, professional response:
+        sections.append(f"PRIMARY INPUT - User's outline:\n{user_prompt}")
 
-User's outline/framework:
-{user_prompt}
+    # Secondary: Context
+    if context:
+        sections.append(f"SECONDARY INPUT - Form context:\n{context}")
 
-"""
-        if context:
-            messages_content += f"""Additional context to incorporate:
-{context}
+    # Supplementary: Memory item
+    if memory_item_value:
+        sections.append(f"SUPPLEMENTARY GUIDANCE - Reference template:\n{memory_item_value}")
 
-"""
-        if memory_item_value:
-            messages_content += f"""Reference template or instructions (for style/structure guidance):
-{memory_item_value}
-
-"""
-        messages_content += """Generate a complete response based on the user's outline, incorporating the context information, and following the style/structure suggested by the template/instructions if provided."""
+    # Generate instruction based on what's available
+    if user_prompt:
+        instruction = "Generate a response following the user's outline above, incorporating context where relevant."
+    elif context:
+        instruction = "Generate a response based on the context above."
     else:
-        # No user_prompt: use memory_item_value as base
-        if memory_item_value:
-            messages_content = memory_item_value
-        else:
-            # No user_prompt and no memory_item_value: use context only
-            messages_content = "Generate a professional response based on the following context:\n\n"
+        instruction = "Generate a response based on the template above."
 
-        if context:
-            if memory_item_value:
-                messages_content += f"""
-
-Additional context:
-{context}
-
-Please incorporate this context into your response and replace any placeholders (like {{company name}} or {{company_name}}) with appropriate information from the context provided above."""
-            else:
-                messages_content += context
+    messages_content = "\n\n".join(sections) + "\n\n" + instruction
 
     # Define JSON Schema to ensure AI returns plain text response
     # OpenAI requires object type, so we wrap it in an object with a "response" field
@@ -339,10 +327,14 @@ Please incorporate this context into your response and replace any placeholders 
         "additionalProperties": False
     }
 
+    # System message to reinforce writing style
+    system_message = """You are a helpful assistant that generates concise, genuine, and direct responses for form filling. Your responses should be brief but clear, authentic, and meaningful. Avoid verbosity, flowery language, or unnecessarily long explanations. Write as a real person would - naturally and to the point."""
+
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
+                {"role": "system", "content": system_message},
                 {"role": "user", "content": messages_content}
             ],
             response_format={

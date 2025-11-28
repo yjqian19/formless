@@ -89,6 +89,7 @@
 
     input[type="text"],
     input[type="email"],
+    input[type="url"],
     textarea {
       width: 100%;
       padding: 10px;
@@ -100,6 +101,7 @@
 
     input[type="text"]:focus,
     input[type="email"]:focus,
+    input[type="url"]:focus,
     textarea:focus {
       outline: none;
       border-color: #999;
@@ -202,8 +204,23 @@
 
     <form>
       <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" placeholder="Enter your full name">
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="your.email@example.com">
+      </div>
+
+      <div class="form-group">
         <label for="linkedin">Your LinkedIn Profile</label>
-        <input type="text" id="linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/...">
+        <input type="url" id="linkedin" name="linkedin" placeholder="https://www.linkedin.com/in/...">
+      </div>
+
+      <div class="form-group">
+        <label for="portfolio">Portfolio URL</label>
+        <input type="url" id="portfolio" name="portfolio" placeholder="https://yourportfolio.com or https://github.com/yourusername">
       </div>
 
       <div class="form-group">

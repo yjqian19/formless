@@ -15,8 +15,38 @@
     {
       "id": "550e8400-e29b-41d4-a716-446655440002",
       "intent": "why join company",
-      "value": "Write a concise and natural “Why this company” answer.\nIntegrate these ideas organically in 3 sentences, without listing them or following a fixed structure:\n\nI like working on real AI applications that create practical value.\nI enjoy hands-on building and fast iteration.\nI’m looking for a strong engineering environment where I can learn quickly.",
+      "value": "Write a concise and natural \"Why this company\" answer.\nIntegrate these ideas organically in 3 sentences, without listing them or following a fixed structure:\n\nI like working on real AI applications that create practical value.\nI enjoy hands-on building and fast iteration.\nI'm looking for a strong engineering environment where I can learn quickly.",
       "type": "prompt"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "intent": "name",
+      "value": "John Doe",
+      "type": "text"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "intent": "email",
+      "value": "john.doe@example.com",
+      "type": "text"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440005",
+      "intent": "portfolio",
+      "value": "https://github.com/johndoe",
+      "type": "text"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440006",
+      "intent": "dietary preference",
+      "value": "Vegetarian, no nuts",
+      "type": "text"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440007",
+      "intent": "affiliation",
+      "value": "Acme Corporation",
+      "type": "text"
     }
   ]
 }
