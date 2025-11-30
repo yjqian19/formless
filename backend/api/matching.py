@@ -1,5 +1,6 @@
 import os
 import json
+import asyncio
 from typing import Optional
 from fastapi import APIRouter, HTTPException
 from openai import OpenAI
@@ -22,19 +23,30 @@ client = OpenAI(api_key=api_key) if api_key else None
 @router.post("", response_model=MatchingResponse)
 async def match_form_fields(request: MatchingRequest):
     """
-    Match a parsed form field with memory data using OpenAI semantic matching.
-    This is called by the Extension to get value for a single form field.
+    Match multiple parsed form fields with memory data using OpenAI semantic matching.
+    This is called by the Extension to get values for form fields.
 
-    Process:
-    1. Get memory items by their intents
-    2. Search for matching intent (search_intent)
-    3. Compose final value from match result and optional inputs (compose_value)
+    Two-stage process:
+    1. Batch match all fields to intents in one API call (batch_search_intents)
+    2. Parallel compose values for each field (batch_compose_values)
+
+    This approach is more efficient than processing each field independently:
+    - Reduces API calls (N fields -> 1 batch match call + N parallel compose calls)
+    - Lower latency (batch matching is faster than N sequential matches)
+    - Better context understanding (AI sees all fields together)
     """
     # Print request details for debugging
     print("=" * 50)
     print("Received matching request:")
     print(json.dumps(request.model_dump(), indent=2, ensure_ascii=False))
     print("=" * 50)
+
+    # Validate input
+    if not request.parsed_fields:
+        raise HTTPException(
+            status_code=400,
+            detail="parsed_fields cannot be empty"
+        )
 
     # Get memory items by their intents (None means all items)
     if not request.memory_intents:
@@ -48,22 +60,158 @@ async def match_form_fields(request: MatchingRequest):
             detail=f"None of the requested memory intents found: {request.memory_intents}"
         )
 
-    # Step 1: Search for matching intent
-    matched_item = await search_intent(
-        parsed_field=request.parsed_field,
+    # Stage 1: Batch match all fields to intents (single API call)
+    print(f"Stage 1: Batch matching {len(request.parsed_fields)} fields to intents...")
+    field_matches = await batch_search_intents(
+        parsed_fields=request.parsed_fields,
         memory_items=memory_items
     )
 
-    # Step 2: Compose final value
-    matched_value = await compose_value(
-        matched_item=matched_item,
-        user_prompt=request.user_prompt,
+    # Print matching results for debugging
+    print("Matching results:")
+    for field, item in field_matches.items():
+        if item:
+            print(f"  {field} -> {item.intent}")
+        else:
+            print(f"  {field} -> None")
+
+    # Stage 2: Parallel compose values for each field
+    print(f"Stage 2: Composing values for {len(request.parsed_fields)} fields in parallel...")
+    matched_fields = await batch_compose_values(
+        field_matches=field_matches,
+        user_prompts=request.user_prompts,
         context=request.context
     )
 
-    # Return in dict format: {field_name: value}
-    # If matched_value is None, return empty string
-    return MatchingResponse(matched_fields={request.parsed_field: matched_value or ""})
+    print("Composition complete!")
+    print("=" * 50)
+
+    return MatchingResponse(matched_fields=matched_fields)
+
+
+async def batch_search_intents(
+    parsed_fields: list[str],
+    memory_items: list[MemoryItem]
+) -> dict[str, Optional[MemoryItem]]:
+    """
+    Batch search for matching intents for multiple form fields.
+    Uses a single API call to match all fields at once.
+
+    Args:
+        parsed_fields: List of form field names to match
+        memory_items: List of memory items to search
+
+    Returns:
+        Dictionary mapping field_name -> matched MemoryItem (or None if no match)
+    """
+    if not client:
+        raise HTTPException(
+            status_code=500,
+            detail="OpenAI API key not configured. Please set OPENAI_API_KEY environment variable."
+        )
+
+    if not memory_items:
+        return {field: None for field in parsed_fields}
+
+    # Prepare items info for AI
+    items_info = [
+        {
+            "intent": item.intent,
+            "value": item.value,
+            "type": item.type
+        }
+        for item in memory_items
+    ]
+
+    # Get available intents for schema validation
+    available_intents = [item.intent for item in memory_items]
+
+    # Define JSON Schema for batch response format
+    # Each field maps to an intent name or null
+    response_schema = {
+        "type": "object",
+        "properties": {
+            field: {
+                "type": ["string", "null"],
+                "enum": available_intents + [None],
+                "description": f"The intent that best matches '{field}', or null if no match"
+            }
+            for field in parsed_fields
+        },
+        "required": parsed_fields,
+        "additionalProperties": False
+    }
+
+    # Create prompt for batch semantic matching
+    system_prompt = """You are a form field matching assistant. Your task is to semantically match multiple form field names with memory item intents in one go.
+
+Given a list of form field names and available memory items (each with an intent, value, and type), determine which intent best matches each field name through semantic understanding. The intent and field name might be expressed differently but have similar meaning.
+
+Return a JSON object mapping each field name to its matched intent. Each intent must be one of the available intents. If no intent matches well for a field, use null for that field.
+
+Important: Each intent can be matched to multiple fields if appropriate (e.g., both "first_name" and "last_name" could map to different aspects of a name-related intent).
+
+Example:
+Form fields: ["full_name", "email", "favorite_color"]
+Memory items: [
+  {"intent": "legal_name", "value": "John Doe", "type": "text"},
+  {"intent": "contact_email", "value": "john@example.com", "type": "text"}
+]
+Result: {
+  "full_name": "legal_name",
+  "email": "contact_email",
+  "favorite_color": null
+}"""
+
+    user_prompt_text = f"""Form fields to match: {json.dumps(parsed_fields)}
+
+Available memory items:
+{json.dumps(items_info, indent=2)}
+
+Available intents: {available_intents}
+
+Return a JSON object mapping each field name to its best matching intent. Use exact intent names from the available intents list, or null if no intent matches well. Perform semantic matching - field names and intents might be worded differently but should have the same meaning."""
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt_text}
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "batch_intent_match",
+                    "strict": True,
+                    "schema": response_schema,
+                    "description": "An object mapping each form field to its matched intent or null"
+                }
+            },
+            temperature=0.1
+        )
+
+        result = json.loads(response.choices[0].message.content)
+
+        # Create a mapping from intent to item for quick lookup
+        intent_to_item = {item.intent: item for item in memory_items}
+
+        # Convert intent names to MemoryItem objects
+        field_matches = {}
+        for field in parsed_fields:
+            matched_intent = result.get(field)
+            if matched_intent and matched_intent in intent_to_item:
+                field_matches[field] = intent_to_item[matched_intent]
+            else:
+                field_matches[field] = None
+
+        return field_matches
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to batch search intents with OpenAI: {str(e)}"
+        )
 
 
 async def search_intent(
@@ -194,6 +342,53 @@ Return a JSON object with an "intent" field containing the intent name that best
             status_code=500,
             detail=f"Failed to search intent with OpenAI: {str(e)}"
         )
+
+
+async def batch_compose_values(
+    field_matches: dict[str, Optional[MemoryItem]],
+    user_prompts: Optional[dict[str, str]] = None,
+    context: Optional[str] = None
+) -> dict[str, str]:
+    """
+    Compose final values for multiple fields in parallel.
+
+    Args:
+        field_matches: Dictionary mapping field_name -> matched MemoryItem (from batch_search_intents)
+        user_prompts: Optional dictionary of field-level user prompts {field_name: prompt}
+        context: Short-term context provided by the form creator
+
+    Returns:
+        Dictionary mapping field_name -> final value (empty string if cannot resolve)
+    """
+    # Create tasks for parallel composition
+    tasks = []
+    fields = []
+
+    for field, matched_item in field_matches.items():
+        user_prompt = user_prompts.get(field) if user_prompts else None
+        tasks.append(
+            compose_value(
+                matched_item=matched_item,
+                user_prompt=user_prompt,
+                context=context
+            )
+        )
+        fields.append(field)
+
+    # Execute all compose_value calls in parallel
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # Build result dictionary, handling exceptions
+    composed_values = {}
+    for field, result in zip(fields, results):
+        if isinstance(result, Exception):
+            # Log error and return empty string
+            print(f"Error composing value for field '{field}': {str(result)}")
+            composed_values[field] = ""
+        else:
+            composed_values[field] = result or ""
+
+    return composed_values
 
 
 async def compose_value(

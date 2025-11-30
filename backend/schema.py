@@ -18,9 +18,9 @@ class MemoryItem(BaseModel):
 
 
 class MatchingRequest(BaseModel):
-    parsed_field: str  # Single form field name to match
+    parsed_fields: list[str]  # List of form field names to match
     memory_intents: list[str] | None = None  # List of intent names to match, None means all
-    user_prompt: str | None = None  # User-provided prompt/outline (for Inline Edit scenarios)
+    user_prompts: dict[str, str] | None = None  # Optional: field-level user prompts {field_name: prompt}
     context: str | None = None  # Short-term context (e.g., company introduction, page content)
 
 
