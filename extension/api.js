@@ -42,10 +42,13 @@ async function getAllMemories() {
 async function matchField(parsedField, memoryIntents = null, userPrompt = null, context = null) {
   const url = `${API_CONFIG.baseURL}/api/matching`;
 
+  // Adapt to new batch API format:
+  // - parsed_field -> parsed_fields (array)
+  // - user_prompt -> user_prompts (object mapping field -> prompt)
   const requestBody = {
-    parsed_field: parsedField,
+    parsed_fields: [parsedField],  // Wrap single field in array
     memory_intents: memoryIntents,
-    user_prompt: userPrompt,
+    user_prompts: userPrompt ? { [parsedField]: userPrompt } : null,  // Convert to object if provided
     context: context
   };
 
