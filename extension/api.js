@@ -53,6 +53,8 @@ async function matchField(parsedField, memoryIntents = null, userPrompt = null, 
   };
 
   try {
+    console.log('[Formless API] Request:', requestBody);
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -63,13 +65,20 @@ async function matchField(parsedField, memoryIntents = null, userPrompt = null, 
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      console.error('[Formless API] Error response:', errorData);
+
+      const errorMessage = typeof errorData.detail === 'string'
+        ? errorData.detail
+        : JSON.stringify(errorData.detail || `HTTP ${response.status}`);
+
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
+    console.log('[Formless API] Response:', data);
     return data;
   } catch (error) {
-    console.error('Error calling matching API:', error);
+    console.error('[Formless API] Error calling matching API:', error);
     throw error;
   }
 }
