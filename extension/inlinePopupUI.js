@@ -36,6 +36,9 @@ function createPopupElement(field) {
   const popup = document.createElement('div');
   popup.className = 'formless-inline-popup';
 
+  // Get field name for display
+  const fieldName = getParsedFieldName(field);
+
   popup.innerHTML = `
     <button class="formless-close-button" id="formless-inline-close" title="Close">&times;</button>
 
@@ -44,7 +47,7 @@ function createPopupElement(field) {
     <div class="section-title">
       <span>Field</span>
     </div>
-    <div class="field-display">${escapeHtml(field.id)}</div>
+    <div class="field-display" title="${escapeHtml(fieldName)}">${escapeHtml(fieldName)}</div>
 
     <div class="section-title">
       <span>Add Prompt</span>
