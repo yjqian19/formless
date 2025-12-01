@@ -44,8 +44,14 @@
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440007",
-      "intent": "affiliation",
+      "intent": "affiliation, current company",
       "value": "Harvard University",
+      "type": "text"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440008",
+      "intent": "phone number",
+      "value": "+1 6172164456",
       "type": "text"
     }
   ]
