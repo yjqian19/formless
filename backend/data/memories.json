@@ -21,19 +21,19 @@
     {
       "id": "550e8400-e29b-41d4-a716-446655440003",
       "intent": "name",
-      "value": "John Doe",
+      "value": "Yujia Qian",
       "type": "text"
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440004",
       "intent": "email",
-      "value": "john.doe@example.com",
+      "value": "yjqian19@gmail.com",
       "type": "text"
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440005",
       "intent": "portfolio",
-      "value": "https://github.com/johndoe",
+      "value": "https://github.com/yjqian19",
       "type": "text"
     },
     {
@@ -45,7 +45,7 @@
     {
       "id": "550e8400-e29b-41d4-a716-446655440007",
       "intent": "affiliation",
-      "value": "Acme Corporation",
+      "value": "Harvard University",
       "type": "text"
     }
   ]

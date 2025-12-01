@@ -296,11 +296,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 /**
- * Check stored mode on page load and enable if needed
+ * Check stored enabled state on page load and enable if needed
  */
-chrome.storage.local.get(['formlessMode'], (result) => {
-  const mode = result.formlessMode || 'page'; // Default to page
-  if (mode === 'inline') {
+chrome.storage.local.get(['formlessEnabled'], (result) => {
+  const enabled = result.formlessEnabled || false;
+  if (enabled) {
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', enableInlineButtons);
@@ -308,7 +308,7 @@ chrome.storage.local.get(['formlessMode'], (result) => {
       enableInlineButtons();
     }
   }
-  // Default page mode - don't enable buttons automatically
+  // Default disabled - don't enable buttons automatically
 });
 
 // Export for use by popup UI

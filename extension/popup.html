@@ -5,19 +5,24 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <h1>Formless</h1>
-
-  <div class="section-title">
-    <span>Mode</span>
+  <!-- Header with Title and Toggle -->
+  <div class="header">
+    <h1>Formless</h1>
+    <label class="toggle-switch">
+      <input type="checkbox" id="enableToggle">
+      <span class="slider"></span>
+    </label>
   </div>
 
-  <div class="mode-toggle">
-    <button id="inlineModeBtn" class="toggle-btn active">Inline</button>
-    <button id="pageModeBtn" class="toggle-btn">Page</button>
-  </div>
+  <!-- Page Fill Section (show when enabled) -->
+  <div id="pageFillSection" style="display: none;">
+    <div class="section-title">
+      <span>Context</span>
+      <span class="optional">(optional)</span>
+    </div>
+    <textarea id="pageContext" placeholder="Add context for better results..."></textarea>
 
-  <div id="modeStatus" class="mode-status">
-    <span id="modeStatusText">Inline mode enabled</span>
+    <button id="pageFillBtn" class="primary">Fill All Fields</button>
   </div>
 
   <script src="popup.js"></script>

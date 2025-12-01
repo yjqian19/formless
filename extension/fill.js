@@ -5,6 +5,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleAutofill(message, sendResponse);
     return true; // Keep message channel open for async response
   }
+
+  if (message.action === 'getPageFields') {
+    const fields = getAllPageFields();
+    sendResponse({ fields: fields });
+    return true;
+  }
+
+  if (message.action === 'batchFill') {
+    handleBatchFill(message.fieldMapping, message.fieldValues);
+    sendResponse({ success: true });
+    return true;
+  }
 });
 
 async function handleAutofill(message, sendResponse) {
@@ -152,6 +164,94 @@ function showNotification(fieldIds, fieldId) {
   setTimeout(() => {
     if (notification && notification.parentNode) {
       notification.parentNode.removeChild(notification);
+    }
+  }, 3000);
+}
+
+/**
+ * Get all form fields on the page
+ * Returns array of {id, parsedName} objects
+ */
+function getAllPageFields() {
+  const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="url"], textarea, select');
+  const fields = [];
+
+  inputs.forEach(input => {
+    if (input.id && !input.closest('.formless-inline-popup')) {
+      // Skip fields inside formless popup
+      const parsedName = getParsedFieldName(input);
+      fields.push({
+        id: input.id,
+        parsedName: parsedName
+      });
+    }
+  });
+
+  console.log('[Formless] Scanned page fields:', fields);
+  return fields;
+}
+
+/**
+ * Handle batch fill from popup
+ * @param {Array} fieldMapping - Array of {id, parsedName}
+ * @param {Object} fieldValues - Object mapping parsedName -> value
+ */
+function handleBatchFill(fieldMapping, fieldValues) {
+  console.log('[Formless] Batch filling fields...');
+  console.log('Field mapping:', fieldMapping);
+  console.log('Field values:', fieldValues);
+
+  let filledCount = 0;
+
+  fieldMapping.forEach(({ id, parsedName }) => {
+    const value = fieldValues[parsedName];
+    if (value && value.trim() !== '') {
+      const field = document.getElementById(id);
+      if (field) {
+        field.value = value;
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+        filledCount++;
+        console.log(`[Formless] Filled field: ${id} (${parsedName})`);
+      }
+    }
+  });
+
+  console.log(`[Formless] Batch fill complete: ${filledCount} fields filled`);
+  showBatchNotification(filledCount);
+}
+
+/**
+ * Show batch fill notification
+ */
+function showBatchNotification(count) {
+  let notification = document.getElementById('formless-batch-notification');
+  if (!notification) {
+    notification = document.createElement('div');
+    notification.id = 'formless-batch-notification';
+    notification.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #000;
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 10000;
+      border: 1px solid #333;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    `;
+    document.body.appendChild(notification);
+  }
+  notification.textContent = `✨ Filled ${count} field${count !== 1 ? 's' : ''}`;
+
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    if (notification && notification.parentNode) {
+      notification.remove();
     }
   }, 3000);
 }
