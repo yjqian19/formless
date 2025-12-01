@@ -59,7 +59,12 @@ async function handleAutofill(message, sendResponse) {
 
       // Only fill if value is not empty (empty string means no match)
       if (matchedValue && matchedValue.trim() !== '') {
-        field.value = matchedValue;
+        // Google Forms special filling
+        if (window.GoogleFormsAdapter && GoogleFormsAdapter.isGoogleForm()) {
+          GoogleFormsAdapter.fillField(field, matchedValue);
+        } else {
+          field.value = matchedValue;
+        }
 
         // Show floating notification
         showNotification([fieldId], fieldId);
@@ -116,6 +121,11 @@ function handleGetAllFields(sendResponse) {
  * Tries to get label, placeholder, or falls back to field id
  */
 function getParsedFieldName(field) {
+  // Google Forms special handling
+  if (window.GoogleFormsAdapter && GoogleFormsAdapter.isGoogleForm()) {
+    return GoogleFormsAdapter.getFieldName(field);
+  }
+
   // Try to find associated label
   if (field.id) {
     const label = document.querySelector(`label[for="${field.id}"]`);
@@ -208,9 +218,14 @@ function handleBatchFill(fieldMapping, fieldValues) {
     if (value && value.trim() !== '') {
       const field = document.getElementById(id);
       if (field) {
-        field.value = value;
-        field.dispatchEvent(new Event('input', { bubbles: true }));
-        field.dispatchEvent(new Event('change', { bubbles: true }));
+        // Google Forms special filling
+        if (window.GoogleFormsAdapter && GoogleFormsAdapter.isGoogleForm()) {
+          GoogleFormsAdapter.fillField(field, value);
+        } else {
+          field.value = value;
+          field.dispatchEvent(new Event('input', { bubbles: true }));
+          field.dispatchEvent(new Event('change', { bubbles: true }));
+        }
         filledCount++;
         console.log(`[Formless] Filled field: ${id} (${parsedName})`);
       }

@@ -275,11 +275,15 @@ async function handleAutoFill(popup, field) {
       const matchedValue = Object.values(result.matched_fields)[0];
 
       if (matchedValue && matchedValue.trim() !== '') {
-        field.value = matchedValue;
-
-        // Trigger input event for frameworks that listen to it
-        field.dispatchEvent(new Event('input', { bubbles: true }));
-        field.dispatchEvent(new Event('change', { bubbles: true }));
+        // Google Forms special filling
+        if (window.GoogleFormsAdapter && GoogleFormsAdapter.isGoogleForm()) {
+          GoogleFormsAdapter.fillField(field, matchedValue);
+        } else {
+          field.value = matchedValue;
+          // Trigger input event for frameworks that listen to it
+          field.dispatchEvent(new Event('input', { bubbles: true }));
+          field.dispatchEvent(new Event('change', { bubbles: true }));
+        }
 
         // Show success notification
         showSuccessNotification(field.id);
@@ -320,6 +324,11 @@ async function handleAutoFill(popup, field) {
  * Get parsed field name from DOM element (reuse from fill.js logic)
  */
 function getParsedFieldName(field) {
+  // Google Forms special handling
+  if (window.GoogleFormsAdapter && GoogleFormsAdapter.isGoogleForm()) {
+    return GoogleFormsAdapter.getFieldName(field);
+  }
+
   // Try to find associated label
   if (field.id) {
     const label = document.querySelector(`label[for="${field.id}"]`);

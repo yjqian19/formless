@@ -87,15 +87,35 @@ function removeAllButtons() {
 function scanAndInjectButtons() {
   if (!inlineButtonsEnabled) return; // Don't scan if disabled
 
-  const fields = document.querySelectorAll(
-    'input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="url"], textarea, select'
-  );
+  let fields = [];
+
+  // Check for Google Forms
+  if (window.GoogleFormsAdapter && GoogleFormsAdapter.isGoogleForm()) {
+    console.log('[Formless] Detected Google Forms page');
+    fields = GoogleFormsAdapter.getAllFields();
+  } else {
+    // Standard forms
+    fields = document.querySelectorAll(
+      'input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="url"], textarea, select'
+    );
+  }
 
   console.log(`[Formless] Found ${fields.length} input fields`);
 
   fields.forEach(field => {
+    // For Google Forms, ensure field has ID
+    if (window.GoogleFormsAdapter && GoogleFormsAdapter.isGoogleForm()) {
+      if (!field.id) {
+        field.id = GoogleFormsAdapter.generateFieldId(field);
+        console.log(`[Formless] Generated ID for Google Forms field: ${field.id}`);
+      }
+    }
+
     // Skip if field has no ID
-    if (!field.id) return;
+    if (!field.id) {
+      console.log('[Formless] Skipping field without ID:', field);
+      return;
+    }
 
     // Skip if button already exists for this field
     if (inlineButtons.has(field.id)) return;
